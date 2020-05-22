@@ -9,15 +9,20 @@ import nc.recipe.generator.DecayGeneratorRecipes;
 import nc.recipe.generator.FusionRecipes;
 import nc.recipe.multiblock.CondenserRecipes;
 import nc.recipe.multiblock.CoolantHeaterRecipes;
+import nc.recipe.multiblock.FissionEmergencyCoolingRecipes;
 import nc.recipe.multiblock.FissionHeatingRecipes;
+import nc.recipe.multiblock.FissionIrradiatorRecipes;
 import nc.recipe.multiblock.FissionModeratorRecipes;
 import nc.recipe.multiblock.FissionReflectorRecipes;
 import nc.recipe.multiblock.HeatExchangerRecipes;
+import nc.recipe.multiblock.PebbleFissionRecipes;
 import nc.recipe.multiblock.SaltFissionRecipes;
 import nc.recipe.multiblock.SolidFissionRecipes;
 import nc.recipe.multiblock.TurbineRecipes;
 import nc.recipe.other.CollectorRecipes;
+import nc.recipe.other.RadiationScrubberRecipes;
 import nc.recipe.processor.AlloyFurnaceRecipes;
+import nc.recipe.processor.AssemblerRecipes;
 import nc.recipe.processor.CentrifugeRecipes;
 import nc.recipe.processor.ChemicalReactorRecipes;
 import nc.recipe.processor.CrystallizerRecipes;
@@ -28,13 +33,12 @@ import nc.recipe.processor.ExtractorRecipes;
 import nc.recipe.processor.FuelReprocessorRecipes;
 import nc.recipe.processor.InfuserRecipes;
 import nc.recipe.processor.IngotFormerRecipes;
-import nc.recipe.processor.IrradiatorRecipes;
-import nc.recipe.processor.IsotopeSeparatorRecipes;
 import nc.recipe.processor.ManufactoryRecipes;
 import nc.recipe.processor.MelterRecipes;
 import nc.recipe.processor.PressurizerRecipes;
 import nc.recipe.processor.RockCrusherRecipes;
 import nc.recipe.processor.SaltMixerRecipes;
+import nc.recipe.processor.SeparatorRecipes;
 import nc.recipe.processor.SupercoolerRecipes;
 import nc.recipe.vanilla.CraftingRecipeHandler;
 import nc.recipe.vanilla.FurnaceFuelHandler;
@@ -50,7 +54,7 @@ public class NCRecipes {
 	private static boolean initialized = false;
 	
 	public static ManufactoryRecipes manufactory;
-	public static IsotopeSeparatorRecipes isotope_separator;
+	public static SeparatorRecipes separator;
 	public static DecayHastenerRecipes decay_hastener;
 	public static FuelReprocessorRecipes fuel_reprocessor;
 	public static AlloyFurnaceRecipes alloy_furnace;
@@ -58,7 +62,7 @@ public class NCRecipes {
 	public static MelterRecipes melter;
 	public static SupercoolerRecipes supercooler;
 	public static ElectrolyzerRecipes electrolyzer;
-	public static IrradiatorRecipes irradiator;
+	public static AssemblerRecipes assembler;
 	public static IngotFormerRecipes ingot_former;
 	public static PressurizerRecipes pressurizer;
 	public static ChemicalReactorRecipes chemical_reactor;
@@ -72,14 +76,18 @@ public class NCRecipes {
 	public static DecayGeneratorRecipes decay_generator;
 	public static FissionModeratorRecipes fission_moderator;
 	public static FissionReflectorRecipes fission_reflector;
+	public static FissionIrradiatorRecipes fission_irradiator;
+	public static PebbleFissionRecipes pebble_fission;
 	public static SolidFissionRecipes solid_fission;
 	public static FissionHeatingRecipes fission_heating;
 	public static SaltFissionRecipes salt_fission;
 	public static FusionRecipes fusion;
 	public static CoolantHeaterRecipes coolant_heater;
+	public static FissionEmergencyCoolingRecipes fission_emergency_cooling;
 	public static HeatExchangerRecipes heat_exchanger;
-	public static TurbineRecipes turbine;
 	public static CondenserRecipes condenser;
+	public static TurbineRecipes turbine;
+	public static RadiationScrubberRecipes radiation_scrubber;
 	public static RadiationBlockMutation radiation_block_mutation;
 	public static RadiationBlockPurification radiation_block_purification;
 	
@@ -87,8 +95,10 @@ public class NCRecipes {
 	public void registerRecipes(RegistryEvent.Register<IRecipe> event) {
 		if (initialized) return;
 		
+		RadSources.init();
+		
 		manufactory = new ManufactoryRecipes();
-		isotope_separator = new IsotopeSeparatorRecipes();
+		separator = new SeparatorRecipes();
 		decay_hastener = new DecayHastenerRecipes();
 		fuel_reprocessor = new FuelReprocessorRecipes();
 		alloy_furnace = new AlloyFurnaceRecipes();
@@ -96,7 +106,7 @@ public class NCRecipes {
 		melter = new MelterRecipes();
 		supercooler = new SupercoolerRecipes();
 		electrolyzer = new ElectrolyzerRecipes();
-		irradiator = new IrradiatorRecipes();
+		assembler = new AssemblerRecipes();
 		ingot_former = new IngotFormerRecipes();
 		pressurizer = new PressurizerRecipes();
 		chemical_reactor = new ChemicalReactorRecipes();
@@ -110,22 +120,24 @@ public class NCRecipes {
 		decay_generator = new DecayGeneratorRecipes();
 		fission_moderator = new FissionModeratorRecipes();
 		fission_reflector = new FissionReflectorRecipes();
+		fission_irradiator = new FissionIrradiatorRecipes();
+		pebble_fission = new PebbleFissionRecipes();
 		solid_fission = new SolidFissionRecipes();
 		fission_heating = new FissionHeatingRecipes();
 		salt_fission = new SaltFissionRecipes();
 		fusion = new FusionRecipes();
 		coolant_heater = new CoolantHeaterRecipes();
+		fission_emergency_cooling = new FissionEmergencyCoolingRecipes();
 		heat_exchanger = new HeatExchangerRecipes();
-		turbine = new TurbineRecipes();
 		condenser = new CondenserRecipes();
+		turbine = new TurbineRecipes();
+		radiation_scrubber = new RadiationScrubberRecipes();
 		radiation_block_mutation = new RadiationBlockMutation();
 		radiation_block_purification = new RadiationBlockPurification();
 		
 		CraftingRecipeHandler.registerCraftingRecipes();
 		FurnaceRecipeHandler.registerFurnaceRecipes();
 		GameRegistry.registerFuelHandler(new FurnaceFuelHandler());
-		
-		RadSources.init();
 		
 		initialized = true;
 	}
@@ -134,7 +146,7 @@ public class NCRecipes {
 	public static List<List<String>> melter_valid_fluids;
 	public static List<List<String>> supercooler_valid_fluids;
 	public static List<List<String>> electrolyzer_valid_fluids;
-	public static List<List<String>> irradiator_valid_fluids;
+	public static List<List<String>> assembler_valid_fluids;
 	public static List<List<String>> ingot_former_valid_fluids;
 	public static List<List<String>> chemical_reactor_valid_fluids;
 	public static List<List<String>> salt_mixer_valid_fluids;
@@ -146,16 +158,18 @@ public class NCRecipes {
 	public static List<List<String>> salt_fission_valid_fluids;
 	public static List<List<String>> fusion_valid_fluids;
 	public static List<List<String>> coolant_heater_valid_fluids;
+	public static List<List<String>> fission_emergency_cooling_valid_fluids;
 	public static List<List<String>> heat_exchanger_valid_fluids;
-	public static List<List<String>> turbine_valid_fluids;
 	public static List<List<String>> condenser_valid_fluids;
+	public static List<List<String>> turbine_valid_fluids;
+	public static List<List<String>> radiation_scrubber_valid_fluids;
 	
 	public static void init() {
 		infuser_valid_fluids = RecipeHelper.validFluids(infuser);
 		melter_valid_fluids = RecipeHelper.validFluids(melter);
 		supercooler_valid_fluids = RecipeHelper.validFluids(supercooler);
 		electrolyzer_valid_fluids = RecipeHelper.validFluids(electrolyzer);
-		irradiator_valid_fluids = RecipeHelper.validFluids(irradiator);
+		assembler_valid_fluids = RecipeHelper.validFluids(assembler);
 		ingot_former_valid_fluids = RecipeHelper.validFluids(ingot_former);
 		chemical_reactor_valid_fluids = RecipeHelper.validFluids(chemical_reactor);
 		salt_mixer_valid_fluids = RecipeHelper.validFluids(salt_mixer);
@@ -167,14 +181,16 @@ public class NCRecipes {
 		salt_fission_valid_fluids = RecipeHelper.validFluids(salt_fission);
 		fusion_valid_fluids = RecipeHelper.validFluids(fusion);
 		coolant_heater_valid_fluids = RecipeHelper.validFluids(coolant_heater);
+		fission_emergency_cooling_valid_fluids = RecipeHelper.validFluids(fission_emergency_cooling);
 		heat_exchanger_valid_fluids = RecipeHelper.validFluids(heat_exchanger);
-		turbine_valid_fluids = RecipeHelper.validFluids(turbine);
 		condenser_valid_fluids = RecipeHelper.validFluids(condenser);
+		turbine_valid_fluids = RecipeHelper.validFluids(turbine);
+		radiation_scrubber_valid_fluids = RecipeHelper.validFluids(radiation_scrubber);
 	}
 	
 	public static void refreshRecipeCaches() {
 		manufactory.refreshCache();
-		isotope_separator.refreshCache();
+		separator.refreshCache();
 		decay_hastener.refreshCache();
 		fuel_reprocessor.refreshCache();
 		alloy_furnace.refreshCache();
@@ -182,7 +198,7 @@ public class NCRecipes {
 		melter.refreshCache();
 		supercooler.refreshCache();
 		electrolyzer.refreshCache();
-		irradiator.refreshCache();
+		assembler.refreshCache();
 		ingot_former.refreshCache();
 		pressurizer.refreshCache();
 		chemical_reactor.refreshCache();
@@ -196,14 +212,18 @@ public class NCRecipes {
 		decay_generator.refreshCache();
 		fission_moderator.refreshCache();
 		fission_reflector.refreshCache();
+		fission_irradiator.refreshCache();
+		pebble_fission.refreshCache();
 		solid_fission.refreshCache();
 		fission_heating.refreshCache();
 		salt_fission.refreshCache();
 		fusion.refreshCache();
 		coolant_heater.refreshCache();
+		fission_emergency_cooling.refreshCache();
 		heat_exchanger.refreshCache();
-		turbine.refreshCache();
 		condenser.refreshCache();
+		turbine.refreshCache();
+		radiation_scrubber.refreshCache();
 		radiation_block_mutation.refreshCache();
 		radiation_block_purification.refreshCache();
 	}

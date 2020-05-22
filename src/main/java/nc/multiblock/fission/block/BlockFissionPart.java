@@ -1,6 +1,6 @@
 package nc.multiblock.fission.block;
 
-import nc.multiblock.BlockMultiblockPart;
+import nc.multiblock.block.BlockMultiblockPart;
 import nc.multiblock.fission.FissionReactor;
 import nc.multiblock.fission.tile.IFissionComponent;
 import nc.multiblock.fission.tile.TileFissionPart;
@@ -62,7 +62,7 @@ public abstract class BlockFissionPart extends BlockMultiblockPart {
 						damage = ((IFissionComponent)part).getCluster().getBurnDamage();
 					}
 					else {
-						damage = reactor.getBurnDamage();
+						damage = reactor.getLogic().getBurnDamage();
 					}
 					if (damage > 0F) {
 						entity.attackEntityFrom(DamageSources.FISSION_BURN, damage);

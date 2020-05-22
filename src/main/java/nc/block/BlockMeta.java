@@ -1,6 +1,7 @@
 package nc.block;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -10,6 +11,7 @@ import nc.tab.NCTabs;
 import nc.tile.ITile;
 import nc.util.CollectionHelper;
 import nc.util.ItemStackHelper;
+import nc.util.NCInventoryHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -20,6 +22,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -119,6 +123,26 @@ public abstract class BlockMeta<T extends Enum<T> & IStringSerializable & IBlock
 		}
 	}
 	
+	public static class BlockFissionReflector extends BlockMeta<MetaEnums.NeutronReflectorType> {
+		
+		public final static PropertyEnum<MetaEnums.NeutronReflectorType> TYPE = PropertyEnum.create("type", MetaEnums.NeutronReflectorType.class);
+		
+		public BlockFissionReflector() {
+			super(MetaEnums.NeutronReflectorType.class, TYPE, Material.IRON);
+			setCreativeTab(NCTabs.MULTIBLOCK);
+		}
+		
+		@Override
+		protected BlockStateContainer createBlockState() {
+			return new BlockStateContainer(this, new IProperty[] {TYPE});
+		}
+	}
+	
+	@Override
+	public String getMetaName(ItemStack stack) {
+		return values[ItemStackHelper.getMetadata(stack)].getName();
+	}
+	
 	public void setMetaHarvestLevels() {
 		Iterator<T> itr = CollectionHelper.asList(values).iterator();
 		while (itr.hasNext()) {
@@ -187,8 +211,13 @@ public abstract class BlockMeta<T extends Enum<T> & IStringSerializable & IBlock
 		}
 	}
 	
-	@Override
-	public String getMetaName(ItemStack stack) {
-		return values[ItemStackHelper.getMetadata(stack)].getName();
+	// Inventory
+	
+	public void dropItems(World world, BlockPos pos, IInventory inventory) {
+		InventoryHelper.dropInventoryItems(world, pos, inventory);
+	}
+	
+	public void dropItems(World world, BlockPos pos, List<ItemStack> stacks) {
+		NCInventoryHelper.dropInventoryItems(world, pos, stacks);
 	}
 }

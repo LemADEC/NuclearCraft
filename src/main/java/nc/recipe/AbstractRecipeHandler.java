@@ -4,7 +4,6 @@ import static nc.util.PermutationHelper.permutations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -13,6 +12,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.Lists;
 
+import crafttweaker.annotations.ZenRegister;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import nc.recipe.ingredient.ChanceFluidIngredient;
@@ -29,17 +31,20 @@ import nc.util.FluidRegHelper;
 import nc.util.ItemStackHelper;
 import nc.util.OreDictHelper;
 import net.minecraft.block.Block;
-import net.minecraft.client.util.RecipeItemHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
+import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenMethod;
 
-public abstract class AbstractRecipeHandler<T extends IRecipe> {
+@ZenClass("mods.nuclearcraft.AbstractRecipeHandler")
+@ZenRegister
+public abstract class AbstractRecipeHandler<RECIPE extends IRecipe> {
 	
-	private List<T> recipeList = new ArrayList<>();
+	protected List<RECIPE> recipeList = new ArrayList<>();
 	
-	private Long2ObjectMap<T> recipeCache = new Long2ObjectOpenHashMap<>();
+	protected Long2ObjectMap<RECIPE> recipeCache = new Long2ObjectOpenHashMap<>();
 	
 	private static List<Class<?>> validItemInputs = Lists.newArrayList(IItemIngredient.class, ArrayList.class, String.class, Item.class, Block.class, ItemStack.class, ItemStack[].class);
 	private static List<Class<?>> validFluidInputs = Lists.newArrayList(IFluidIngredient.class, ArrayList.class, String.class, Fluid.class, FluidStack.class, FluidStack[].class);
@@ -49,20 +54,24 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 	private static List<Class<?>> needItemAltering = Lists.newArrayList(Item.class, Block.class);
 	private static List<Class<?>> needFluidAltering = Lists.newArrayList(Fluid.class);
 	
-	public static final List<Integer> INVALID = Lists.newArrayList(-1);
+	public static final IntList INVALID = new IntArrayList(new int[] {-1});
 	
 	public abstract void addRecipes();
 	
+	@ZenMethod
 	public abstract String getRecipeName();
 	
-	public List<T> getRecipeList() {
-		return recipeList;
+	@ZenMethod
+	public abstract List<RECIPE> getRecipeList();
+	
+	public Long2ObjectMap<RECIPE> getRecipeCache() {
+		return recipeCache;
 	}
 	
 	public abstract void addRecipe(Object... objects);
 	
-	public @Nullable RecipeInfo<T> getRecipeInfoFromInputs(List<ItemStack> itemInputs, List<Tank> fluidInputs) {
-		T recipe = recipeCache.get(hashMaterialsRaw(itemInputs, fluidInputs));
+	public @Nullable RecipeInfo<RECIPE> getRecipeInfoFromInputs(List<ItemStack> itemInputs, List<Tank> fluidInputs) {
+		RECIPE recipe = recipeCache.get(RecipeHelper.hashMaterialsRaw(itemInputs, fluidInputs));
 		if (recipe != null) {
 			RecipeMatchResult matchResult = recipe.matchInputs(itemInputs, fluidInputs);
 			if (matchResult.matches()) return new RecipeInfo(recipe, matchResult);
@@ -70,7 +79,7 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 		return null;
 	}
 	
-	/*public @Nullable RecipeInfo<T> getRecipeInfoFromOutputs(List<ItemStack> itemOutputs, List<Tank> fluidOutputs) {
+	/*public @Nullable RecipeInfo<RECIPE> getRecipeInfoFromOutputs(List<ItemStack> itemOutputs, List<Tank> fluidOutputs) {
 		if (isFullNull(itemOutputs, fluidOutputs)) return null;
 		
 		for (T recipe : recipeList) {
@@ -86,15 +95,15 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 		return true;
 	}*/
 	
-	public @Nullable T getRecipeFromIngredients(List<IItemIngredient> itemIngredients, List<IFluidIngredient> fluidIngredients) {
-		for (T recipe : recipeList) {
+	public @Nullable RECIPE getRecipeFromIngredients(List<IItemIngredient> itemIngredients, List<IFluidIngredient> fluidIngredients) {
+		for (RECIPE recipe : recipeList) {
 			if (recipe.matchIngredients(itemIngredients, fluidIngredients).matches()) return recipe;
 		}
 		return null;
 	}
 	
-	public @Nullable T getRecipeFromProducts(List<IItemIngredient> itemProducts, List<IFluidIngredient> fluidProducts) {
-		for (T recipe : recipeList) {
+	public @Nullable RECIPE getRecipeFromProducts(List<IItemIngredient> itemProducts, List<IFluidIngredient> fluidProducts) {
+		for (RECIPE recipe : recipeList) {
 			if (recipe.matchProducts(itemProducts, fluidProducts).matches()) return recipe;
 		}
 		return null;
@@ -102,23 +111,23 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 	
 	/*public List<IIngredient> getInputList(Object... outputs) {
 		List outputList = ArrayHelper.asList(outputs);
-		T recipe = getRecipeFromOutputs(outputList);
-		List result = recipe != null ? recipe.inputs() : new ArrayList<IIngredient>();
+		RECIPE recipe = getRecipeFromOutputs(outputList);
+		List result = recipe != null ? recipe.inputs() : new ArrayList<>();
 		return result;
 	}
 
 	public List<IIngredient> getOutputList(Object... inputs) {
 		List inputList = ArrayHelper.asList(inputs);
-		T recipe = getRecipeFromInputs(inputList);
-		List result = recipe != null ? recipe.outputs() : new ArrayList<IIngredient>();
+		RECIPE recipe = getRecipeFromInputs(inputList);
+		List result = recipe != null ? recipe.outputs() : new ArrayList<>();
 		return result;
 	}*/
 	
-	public boolean addRecipe(T recipe) {
+	public boolean addRecipe(RECIPE recipe) {
 		return recipe != null ? recipeList.add(recipe) : false;
 	}
 
-	public boolean removeRecipe(T recipe) {
+	public boolean removeRecipe(RECIPE recipe) {
 		return recipe != null ? recipeList.remove(recipe) : false;
 	}
 	
@@ -130,14 +139,14 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 	public void refreshCache() {
 		recipeCache.clear();
 		
-		recipeLoop: for (T recipe : recipeList) {
+		recipeLoop: for (RECIPE recipe : recipeList) {
 			List<List<ItemStack>> itemInputLists = new ArrayList<>();
 			List<List<FluidStack>> fluidInputLists = new ArrayList<>();
 			
-			for (IItemIngredient item : recipe.itemIngredients()) itemInputLists.add(item.getInputStackHashingList());
-			for (IFluidIngredient fluid : recipe.fluidIngredients()) fluidInputLists.add(fluid.getInputStackHashingList());
+			for (IItemIngredient item : recipe.getItemIngredients()) itemInputLists.add(item.getInputStackHashingList());
+			for (IFluidIngredient fluid : recipe.getFluidIngredients()) fluidInputLists.add(fluid.getInputStackHashingList());
 			
-			int arrSize = recipe.itemIngredients().size() + recipe.fluidIngredients().size();
+			int arrSize = recipe.getItemIngredients().size() + recipe.getFluidIngredients().size();
 			int[] inputNumbers = new int[arrSize];
 			Arrays.fill(inputNumbers, 0);
 			
@@ -155,46 +164,16 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 			
 			List<Pair<List<ItemStack>, List<FluidStack>>> materialListTuples = new ArrayList<>();
 			
-			RecipeHelper.generateMaterialListTuples(materialListTuples, maxNumbers, inputNumbers, itemInputLists, fluidInputLists);
+			RecipeTupleGenerator.INSTANCE.generateMaterialListTuples(materialListTuples, maxNumbers, inputNumbers, itemInputLists, fluidInputLists);
 			
 			for (Pair<List<ItemStack>, List<FluidStack>> materials : materialListTuples) {
 				for (List<ItemStack> items : permutations(materials.getLeft())) {
 					for (List<FluidStack> fluids : permutations(materials.getRight())) {
-						recipeCache.put(hashMaterials(items, fluids), recipe);
+						recipeCache.put(RecipeHelper.hashMaterials(items, fluids), recipe);
 					}
 				}
 			}
 		}
-	}
-	
-	private static long hashMaterialsRaw(List<ItemStack> items, List<Tank> fluids) {
-		long hash = 1L;
-		Iterator<ItemStack> itemIter = items.iterator();
-		while (itemIter.hasNext()) {
-			ItemStack stack = itemIter.next();
-			hash = 31L*hash + (stack == null ? 0L : RecipeItemHelper.pack(stack));
-		}
-		Iterator<Tank> fluidIter = fluids.iterator();
-		while (fluidIter.hasNext()) {
-			Tank tank = fluidIter.next();
-			hash = 31L*hash + (tank == null ? 0L : tank.getFluid() == null ? 0L : tank.getFluid().getFluid().getName().hashCode());
-		}
-		return hash;
-	}
-	
-	private static long hashMaterials(List<ItemStack> items, List<FluidStack> fluids) {
-		long hash = 1L;
-		Iterator<ItemStack> itemIter = items.iterator();
-		while (itemIter.hasNext()) {
-			ItemStack stack = itemIter.next();
-			hash = 31L*hash + (stack == null ? 0L : RecipeItemHelper.pack(stack));
-		}
-		Iterator<FluidStack> fluidIter = fluids.iterator();
-		while (fluidIter.hasNext()) {
-			FluidStack stack = fluidIter.next();
-			hash = 31L*hash + (stack == null ? 0L : stack.getFluid().getName().hashCode());
-		}
-		return hash;
 	}
 	
 	public static void addValidItemInput(Class itemInputType) {
@@ -270,8 +249,8 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 	}
 	
 	public boolean isValidItemInput(ItemStack stack) {
-		for (T recipe : recipeList) {
-			for (IItemIngredient input : recipe.itemIngredients()) {
+		for (RECIPE recipe : recipeList) {
+			for (IItemIngredient input : recipe.getItemIngredients()) {
 				if (input.match(stack, IngredientSorption.NEUTRAL).matches()) {
 					return true;
 				}
@@ -281,8 +260,8 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 	}
 	
 	public boolean isValidFluidInput(FluidStack stack) {
-		for (T recipe : recipeList) {
-			for (IFluidIngredient input : recipe.fluidIngredients()) {
+		for (RECIPE recipe : recipeList) {
+			for (IFluidIngredient input : recipe.getFluidIngredients()) {
 				if (input.match(stack, IngredientSorption.NEUTRAL).matches()) {
 					return true;
 				}
@@ -292,8 +271,8 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 	}
 
 	public boolean isValidItemOutput(ItemStack stack) {
-		for (T recipe : recipeList) {
-			for (IItemIngredient output : recipe.itemProducts()) {
+		for (RECIPE recipe : recipeList) {
+			for (IItemIngredient output : recipe.getItemProducts()) {
 				if (output.match(stack, IngredientSorption.OUTPUT).matches()) {
 					return true;
 				}
@@ -303,8 +282,8 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 	}
 	
 	public boolean isValidFluidOutput(FluidStack stack) {
-		for (T recipe : recipeList) {
-			for (IFluidIngredient output : recipe.fluidProducts()) {
+		for (RECIPE recipe : recipeList) {
+			for (IFluidIngredient output : recipe.getFluidProducts()) {
 				if (output.match(stack, IngredientSorption.OUTPUT).matches()) {
 					return true;
 				}
@@ -328,10 +307,10 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 		List<ItemStack> allStacks = Lists.newArrayList(stack);
 		allStacks.addAll(otherStacks);
 		
-		List<T> recipeList = new ArrayList(this.recipeList);
-		recipeLoop: for (T recipe : this.recipeList) {
+		List<RECIPE> recipeList = new ArrayList(this.recipeList);
+		recipeLoop: for (RECIPE recipe : this.recipeList) {
 			objLoop: for (ItemStack obj : allStacks) {
-				for (IItemIngredient input : recipe.itemIngredients()) {
+				for (IItemIngredient input : recipe.getItemIngredients()) {
 					if (input.match(obj, IngredientSorption.NEUTRAL).matches()) continue objLoop;
 				}
 				recipeList.remove(recipe);
@@ -339,8 +318,8 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 			}
 		}
 		
-		for (T recipe : recipeList) {
-			for (IItemIngredient input : recipe.itemIngredients()) {
+		for (RECIPE recipe : recipeList) {
+			for (IItemIngredient input : recipe.getItemIngredients()) {
 				if (input.match(stack, IngredientSorption.NEUTRAL).matches()) {
 					for (ItemStack other : otherStacks) {
 						if (input.match(other, IngredientSorption.NEUTRAL).matches()) return false;
@@ -353,7 +332,7 @@ public abstract class AbstractRecipeHandler<T extends IRecipe> {
 		return false;
 	}
 	
-	// Stacks
+	/* ================================== Recipe Ingredients ===================================== */
 	
 	public static OreIngredient oreStack(String oreType, int stackSize) {
 		if (!OreDictHelper.oreExists(oreType)) return null;

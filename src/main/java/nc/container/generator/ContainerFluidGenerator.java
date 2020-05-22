@@ -2,20 +2,24 @@ package nc.container.generator;
 
 import nc.container.ContainerTile;
 import nc.recipe.ProcessorRecipeHandler;
+import nc.tile.ITileGui;
+import nc.tile.generator.IFluidGenerator;
 import nc.tile.generator.TileFluidGenerator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-public class ContainerFluidGenerator<GENERATOR extends TileFluidGenerator> extends ContainerTile {
+public abstract class ContainerFluidGenerator<GENERATOR extends IFluidGenerator & ITileGui> extends ContainerTile<GENERATOR> {
 	
-	public final GENERATOR tile;
-	public final ProcessorRecipeHandler recipeHandler;
+	protected final GENERATOR tile;
+	protected final ProcessorRecipeHandler recipeHandler;
 	
-	public ContainerFluidGenerator(GENERATOR tileEntity, ProcessorRecipeHandler recipeHandler) {
+	public ContainerFluidGenerator(EntityPlayer player, GENERATOR tileEntity, ProcessorRecipeHandler recipeHandler) {
 		super(tileEntity);
 		tile = tileEntity;
 		this.recipeHandler = recipeHandler;
+		
+		tileEntity.beginUpdatingPlayer(player);
 	}
 	
 	@Override
@@ -24,12 +28,18 @@ public class ContainerFluidGenerator<GENERATOR extends TileFluidGenerator> exten
 	}
 	
 	@Override
+	public void onContainerClosed(EntityPlayer player) {
+		super.onContainerClosed(player);
+		tile.stopUpdatingPlayer(player);
+	}
+	
+	@Override
 	public ItemStack transferStackInSlot(EntityPlayer player, int index) {
 		ItemStack itemstack = ItemStack.EMPTY;
 		Slot slot = inventorySlots.get(index);
-		//int otherSlots = tile.otherSlotsSize;
-		int invStart = tile.otherSlotsSize;
-		int invEnd = 36 + tile.otherSlotsSize;
+		int otherSlotsSize = tile instanceof TileFluidGenerator ? ((TileFluidGenerator)tile).getOtherSlotsSize() : 0;
+		int invStart = otherSlotsSize;
+		int invEnd = 36 + otherSlotsSize;
 		if (slot != null && slot.getHasStack()) {
 			ItemStack itemstack1 = slot.getStack();
 			itemstack = itemstack1.copy();

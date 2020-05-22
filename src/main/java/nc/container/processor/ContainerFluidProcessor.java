@@ -3,20 +3,23 @@ package nc.container.processor;
 import nc.container.ContainerTile;
 import nc.init.NCItems;
 import nc.recipe.ProcessorRecipeHandler;
-import nc.tile.processor.TileFluidProcessor;
+import nc.tile.ITileGui;
+import nc.tile.inventory.ITileInventory;
+import nc.tile.processor.IFluidProcessor;
+import nc.tile.processor.IUpgradable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-public class ContainerFluidProcessor extends ContainerTile {
+public abstract class ContainerFluidProcessor<PROCESSOR extends IFluidProcessor & ITileGui> extends ContainerTile<PROCESSOR> {
 	
-	public final TileFluidProcessor tile;
-	public final ProcessorRecipeHandler recipeHandler;
+	protected final PROCESSOR tile;
+	protected final ProcessorRecipeHandler recipeHandler;
 	
-	protected ItemStack speedUpgrade = new ItemStack(NCItems.upgrade, 1, 0);
-	protected ItemStack energyUpgrade = new ItemStack(NCItems.upgrade, 1, 1);
+	protected static final ItemStack SPEED_UPGRADE = new ItemStack(NCItems.upgrade, 1, 0);
+	protected static final ItemStack ENERGY_UPGRADE = new ItemStack(NCItems.upgrade, 1, 1);
 	
-	public ContainerFluidProcessor(EntityPlayer player, TileFluidProcessor tileEntity, ProcessorRecipeHandler recipeHandler) {
+	public ContainerFluidProcessor(EntityPlayer player, PROCESSOR tileEntity, ProcessorRecipeHandler recipeHandler) {
 		super(tileEntity);
 		tile = tileEntity;
 		this.recipeHandler = recipeHandler;
@@ -39,7 +42,8 @@ public class ContainerFluidProcessor extends ContainerTile {
 	public ItemStack transferStackInSlot(EntityPlayer player, int index) {
 		ItemStack itemstack = ItemStack.EMPTY;
 		Slot slot = inventorySlots.get(index);
-		int upgrades = tile.hasUpgrades? 2 : 0;
+		final boolean hasUpgrades = tile instanceof IUpgradable && ((IUpgradable)tile).hasUpgrades();
+		int upgrades = hasUpgrades ? ((IUpgradable)tile).getNumberOfUpgrades() : 0;
 		int invStart = upgrades;
 		int speedUpgradeSlot = 0;
 		int otherUpgradeSlot = 1;
@@ -54,18 +58,19 @@ public class ContainerFluidProcessor extends ContainerTile {
 				slot.onSlotChange(itemstack1, itemstack);
 			}
 			else if (index >= invStart) {
-				if (tile.isItemValidForSlot(speedUpgradeSlot, itemstack1) && tile.hasUpgrades && itemstack1.getItem() == NCItems.upgrade) {
-					if (!mergeItemStack(itemstack1, speedUpgradeSlot, speedUpgradeSlot + 1, false)) {
-						return ItemStack.EMPTY;
+				if (tile instanceof ITileInventory && hasUpgrades && itemstack1.getItem() == NCItems.upgrade) {
+					if (((ITileInventory)tile).isItemValidForSlot(speedUpgradeSlot, itemstack1)) {
+						if (!mergeItemStack(itemstack1, speedUpgradeSlot, speedUpgradeSlot + 1, false)) {
+							return ItemStack.EMPTY;
+						}
+					}
+					else if (((ITileInventory)tile).isItemValidForSlot(otherUpgradeSlot, itemstack1)) {
+						if (!mergeItemStack(itemstack1, otherUpgradeSlot, otherUpgradeSlot + 1, false)) {
+							return ItemStack.EMPTY;
+						}
 					}
 				}
-				else if (tile.isItemValidForSlot(otherUpgradeSlot, itemstack1) && tile.hasUpgrades && itemstack1.getItem() == NCItems.upgrade) {
-					if (!mergeItemStack(itemstack1, otherUpgradeSlot, otherUpgradeSlot + 1, false)) {
-						return ItemStack.EMPTY;
-					}
-				}
-				
-				else if (recipeHandler.isValidItemInput(itemstack1)) {
+				if (recipeHandler.isValidItemInput(itemstack1)) {
 					if (!mergeItemStack(itemstack1, 0, 0, false)) {
 						return ItemStack.EMPTY;
 					}

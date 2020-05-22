@@ -3,6 +3,7 @@ package nc.multiblock.cuboidal;
 import nc.multiblock.Multiblock;
 import nc.multiblock.MultiblockValidationError;
 import nc.multiblock.network.MultiblockUpdatePacket;
+import nc.multiblock.tile.ITileMultiblockPart;
 import nc.util.NCMath;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -10,7 +11,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.World;
 
-public abstract class CuboidalMultiblock<PACKET extends MultiblockUpdatePacket> extends Multiblock<PACKET> {
+public abstract class CuboidalMultiblock<T extends ITileMultiblockPart, PACKET extends MultiblockUpdatePacket> extends Multiblock<T, PACKET> {
 	
 	protected CuboidalMultiblock(World world) {
 		super(world);
@@ -91,10 +92,15 @@ public abstract class CuboidalMultiblock<PACKET extends MultiblockUpdatePacket> 
 					if(te instanceof TileCuboidalMultiblockPart) {
 						part = (TileCuboidalMultiblockPart)te;
 						
-						// Ensure this part should actually be allowed within a cube of this multiblock's type
+						// Ensure this part should actually be allowed within a cuboid of this multiblock's type
 						if(!myClass.equals(part.getMultiblockType())) {
-							
 							multiblock.setLastError("zerocore.api.nc.multiblock.validation.invalid_part", new BlockPos(x, y, z), x, y, z);
+							return false;
+						}
+						
+						// Ensure this part is actually connected to this multiblock
+						if (part.getMultiblock() != this) {
+							multiblock.setLastError("zerocore.api.nc.multiblock.validation.invalid_part_disconnected", new BlockPos(x, y, z), x, y, z);
 							return false;
 						}
 					}

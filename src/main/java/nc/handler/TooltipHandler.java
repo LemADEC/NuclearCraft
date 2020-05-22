@@ -1,8 +1,9 @@
 package nc.handler;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import nc.NCInfo;
 import nc.capability.radiation.resistance.IRadiationResistance;
@@ -13,7 +14,6 @@ import nc.radiation.RadiationHelper;
 import nc.recipe.NCRecipes;
 import nc.recipe.ProcessorRecipe;
 import nc.recipe.RecipeInfo;
-import nc.tile.internal.fluid.Tank;
 import nc.util.ArmorHelper;
 import nc.util.InfoHelper;
 import nc.util.Lang;
@@ -32,13 +32,25 @@ public class TooltipHandler {
 	@SideOnly(Side.CLIENT)
 	public void addAdditionalTooltips(ItemTooltipEvent event) {
 		ItemStack stack = event.getItemStack();
-		RecipeInfo<ProcessorRecipe> recipeInfo = NCRecipes.fission_moderator.getRecipeInfoFromInputs(Arrays.asList(stack), new ArrayList<Tank>());
+		RecipeInfo<ProcessorRecipe> recipeInfo = NCRecipes.pebble_fission.getRecipeInfoFromInputs(Lists.newArrayList(stack), new ArrayList<>());
 		ProcessorRecipe recipe = recipeInfo == null ? null : recipeInfo.getRecipe();
+		if (recipe != null) {
+			InfoHelper.infoFull(event.getToolTip(), new TextFormatting[] {}, InfoHelper.EMPTY_ARRAY, new TextFormatting[] {TextFormatting.UNDERLINE, TextFormatting.GREEN, TextFormatting.YELLOW, TextFormatting.LIGHT_PURPLE, TextFormatting.RED, TextFormatting.DARK_AQUA}, NCInfo.fissionFuelInfo(recipe));
+		}
+		
+		recipeInfo = NCRecipes.solid_fission.getRecipeInfoFromInputs(Lists.newArrayList(stack), new ArrayList<>());
+		recipe = recipeInfo == null ? null : recipeInfo.getRecipe();
+		if (recipe != null) {
+			InfoHelper.infoFull(event.getToolTip(), new TextFormatting[] {}, InfoHelper.EMPTY_ARRAY, new TextFormatting[] {TextFormatting.UNDERLINE, TextFormatting.GREEN, TextFormatting.YELLOW, TextFormatting.LIGHT_PURPLE, TextFormatting.RED, TextFormatting.DARK_AQUA}, NCInfo.fissionFuelInfo(recipe));
+		}
+		
+		recipeInfo = NCRecipes.fission_moderator.getRecipeInfoFromInputs(Lists.newArrayList(stack), new ArrayList<>());
+		recipe = recipeInfo == null ? null : recipeInfo.getRecipe();
 		if (recipe != null) {
 			InfoHelper.infoFull(event.getToolTip(), new TextFormatting[] {TextFormatting.UNDERLINE, TextFormatting.GREEN, TextFormatting.LIGHT_PURPLE}, NCInfo.fissionModeratorFixedInfo(recipe), TextFormatting.AQUA, NCInfo.fissionModeratorInfo());
 		}
 		
-		recipeInfo = NCRecipes.fission_reflector.getRecipeInfoFromInputs(Arrays.asList(stack), new ArrayList<Tank>());
+		recipeInfo = NCRecipes.fission_reflector.getRecipeInfoFromInputs(Lists.newArrayList(stack), new ArrayList<>());
 		recipe = recipeInfo == null ? null : recipeInfo.getRecipe();
 		if (recipe != null) {
 			InfoHelper.infoFull(event.getToolTip(), new TextFormatting[] {TextFormatting.UNDERLINE, TextFormatting.WHITE, TextFormatting.LIGHT_PURPLE}, NCInfo.fissionReflectorFixedInfo(recipe), TextFormatting.AQUA, NCInfo.fissionReflectorInfo());
@@ -76,7 +88,7 @@ public class TooltipHandler {
 	@SideOnly(Side.CLIENT)
 	private static void addRadiationTooltip(List<String> tooltip, ItemStack stack) {
 		IRadiationSource stackRadiation = RadiationHelper.getRadiationSource(stack);
-		if (stackRadiation == null || stackRadiation.getRadiationLevel() <= 0D) return;
+		if (stackRadiation == null || stackRadiation.getRadiationLevel()*stack.getCount() <= NCConfig.radiation_lowest_rate) return;
 		tooltip.add(RadiationHelper.getRadiationTextColor(stackRadiation.getRadiationLevel()*stack.getCount()) + RADIATION + " " + RadiationHelper.radsPrefix(stackRadiation.getRadiationLevel()*stack.getCount(), true));
 		return;
 	}

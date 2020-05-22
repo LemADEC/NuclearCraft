@@ -3,9 +3,12 @@ package nc.multiblock.turbine.block;
 import static nc.block.property.BlockProperties.ACTIVE;
 import static nc.block.property.BlockProperties.FACING_ALL;
 
+import javax.annotation.Nullable;
+
 import nc.NuclearCraft;
 import nc.init.NCBlocks;
 import nc.multiblock.turbine.tile.TileTurbineController;
+import nc.util.BlockHelper;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -14,6 +17,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public class BlockTurbineController extends BlockTurbinePart {
@@ -56,27 +60,7 @@ public class BlockTurbineController extends BlockTurbinePart {
 	@Override
 	public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
 		super.onBlockAdded(world, pos, state);
-		setDefaultDirection(world, pos, state);
-	}
-	
-	private static void setDefaultDirection(World world, BlockPos pos, IBlockState state) {
-		if (!world.isRemote) {
-			EnumFacing enumfacing = state.getValue(FACING_ALL);
-			boolean flag = world.getBlockState(pos.north()).isFullBlock();
-			boolean flag1 = world.getBlockState(pos.south()).isFullBlock();
-
-			if (enumfacing == EnumFacing.NORTH && flag && !flag1) enumfacing = EnumFacing.SOUTH;
-			else if (enumfacing == EnumFacing.SOUTH && flag1 && !flag) enumfacing = EnumFacing.NORTH;
-			
-			else {
-				boolean flag2 = world.getBlockState(pos.west()).isFullBlock();
-				boolean flag3 = world.getBlockState(pos.east()).isFullBlock();
-
-				if (enumfacing == EnumFacing.WEST && flag2 && !flag3) enumfacing = EnumFacing.EAST;
-				else if (enumfacing == EnumFacing.EAST && flag3 && !flag2) enumfacing = EnumFacing.WEST;
-			}
-			world.setBlockState(pos, state.withProperty(FACING_ALL, enumfacing).withProperty(ACTIVE, Boolean.valueOf(false)), 2);
-		}
+		BlockHelper.setDefaultFacing(world, pos, state, FACING_ALL);
 	}
 	
 	@Override
@@ -85,15 +69,21 @@ public class BlockTurbineController extends BlockTurbinePart {
 		if (hand != EnumHand.MAIN_HAND || player.isSneaking()) return false;
 		
 		if (!world.isRemote) {
-			if (world.getTileEntity(pos) instanceof TileTurbineController) {
-				TileTurbineController controller = (TileTurbineController) world.getTileEntity(pos);
-				if (controller.getMultiblock() != null && controller.getMultiblock().isAssembled()) {
+			TileEntity tile = world.getTileEntity(pos);
+			if (tile instanceof TileTurbineController) {
+				TileTurbineController controller = (TileTurbineController) tile;
+				if (controller.isMultiblockAssembled()) {
 					player.openGui(NuclearCraft.instance, 104, world, pos.getX(), pos.getY(), pos.getZ());
 					return true;
 				}
 			}
 		}
 		return rightClickOnPart(world, pos, player, hand, facing, true);
+	}
+	
+	@Override
+	public boolean canConnectRedstone(IBlockState state, IBlockAccess world, BlockPos pos, @Nullable EnumFacing side) {
+		return side != null;
 	}
 	
 	public void setState(boolean isActive, TileEntity tile) {

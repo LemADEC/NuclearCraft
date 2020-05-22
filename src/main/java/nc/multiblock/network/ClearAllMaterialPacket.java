@@ -1,10 +1,8 @@
 package nc.multiblock.network;
 
 import io.netty.buffer.ByteBuf;
-import nc.multiblock.ILogicMultiblock;
-import nc.multiblock.ITileMultiblockPart;
 import nc.multiblock.Multiblock;
-import nc.util.NCUtil;
+import nc.multiblock.tile.ITileMultiblockPart;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -32,8 +30,8 @@ public class ClearAllMaterialPacket implements IMessage {
 	public void fromBytes(ByteBuf buf) {
 		try {
 			pos = new BlockPos(buf.readInt(), buf.readInt(), buf.readInt());
-		} catch (IndexOutOfBoundsException ioe) {
-			NCUtil.getLogger().catching(ioe);
+		} catch (IndexOutOfBoundsException e) {
+			e.printStackTrace();
 			return;
 		}
 		messageValid = true;
@@ -61,7 +59,7 @@ public class ClearAllMaterialPacket implements IMessage {
 			if (tile == null) return;
 			if(tile instanceof ITileMultiblockPart) {
 				Multiblock multiblock = ((ITileMultiblockPart)tile).getMultiblock();
-				if (multiblock instanceof ILogicMultiblock) ((ILogicMultiblock)multiblock).clearAllMaterial();
+				multiblock.clearAllMaterial();
 			}
 		}
 	}

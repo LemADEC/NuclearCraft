@@ -5,7 +5,7 @@ import javax.annotation.Nullable;
 import nc.NuclearCraft;
 import nc.block.NCBlock;
 import nc.init.NCItems;
-import nc.tile.IGui;
+import nc.tile.ITileGui;
 import nc.tile.fluid.ITileFluid;
 import nc.tile.inventory.ITileInventory;
 import nc.tile.processor.IProcessor;
@@ -17,7 +17,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -48,14 +47,14 @@ public abstract class BlockTile extends NCBlock implements ITileEntityProvider {
 		
 		TileEntity tile = world.getTileEntity(pos);
 		if (tile instanceof IUpgradable) {
-			if (installUpgrade(tile, ((IUpgradable) tile).getSpeedUpgradeSlot(), player, facing, new ItemStack(NCItems.upgrade, 1, 0))) return true;
-			if (installUpgrade(tile, ((IUpgradable) tile).getEnergyUpgradeSlot(), player, facing, new ItemStack(NCItems.upgrade, 1, 1))) return true;
+			if (installUpgrade(tile, ((IUpgradable) tile).getSpeedUpgradeSlot(), player, hand, facing, new ItemStack(NCItems.upgrade, 1, 0))) return true;
+			if (installUpgrade(tile, ((IUpgradable) tile).getEnergyUpgradeSlot(), player, hand, facing, new ItemStack(NCItems.upgrade, 1, 1))) return true;
 		}
 		
 		if (player.isSneaking()) return false;
 		
-		if (!(tile instanceof ITileFluid) && !(tile instanceof IGui)) return false;
-		if (tile instanceof ITileFluid && !(tile instanceof IGui) && FluidUtil.getFluidHandler(player.getHeldItem(hand)) == null) return false;
+		if (!(tile instanceof ITileFluid) && !(tile instanceof ITileGui)) return false;
+		if (tile instanceof ITileFluid && !(tile instanceof ITileGui) && FluidUtil.getFluidHandler(player.getHeldItem(hand)) == null) return false;
 		
 		if (tile instanceof ITileFluid) {
 			if (world.isRemote) return true;
@@ -69,7 +68,7 @@ public abstract class BlockTile extends NCBlock implements ITileEntityProvider {
 				return true;
 			}
 		}
-		if (tile instanceof IGui) {
+		if (tile instanceof ITileGui) {
 			if (world.isRemote) {
 				onGuiOpened(world, pos);
 				return true;
@@ -79,7 +78,7 @@ public abstract class BlockTile extends NCBlock implements ITileEntityProvider {
 					((IProcessor) tile).refreshRecipe();
 					((IProcessor) tile).refreshActivity();
 				}
-				FMLNetworkHandler.openGui(player, NuclearCraft.instance, ((IGui) tile).getGuiID(), world, pos.getX(), pos.getY(), pos.getZ());
+				FMLNetworkHandler.openGui(player, NuclearCraft.instance, ((ITileGui) tile).getGuiID(), world, pos.getX(), pos.getY(), pos.getZ());
 			}
 		}
 		else return false;
@@ -87,17 +86,17 @@ public abstract class BlockTile extends NCBlock implements ITileEntityProvider {
 		return true;
 	}
 	
-	protected boolean installUpgrade(TileEntity tile, int slot, EntityPlayer player, EnumFacing facing, ItemStack stack) {
-		if (player.getHeldItemMainhand().isItemEqual(stack)) {
+	protected boolean installUpgrade(TileEntity tile, int slot, EntityPlayer player, EnumHand hand, EnumFacing facing, ItemStack stack) {
+		if (player.getHeldItem(hand).isItemEqual(stack)) {
 			IItemHandler inv = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing);
 			
-			if (inv != null && inv.isItemValid(slot, player.getHeldItemMainhand())) {
+			if (inv != null && inv.isItemValid(slot, player.getHeldItem(hand))) {
 				if (player.isSneaking()) {
-					player.setHeldItem(EnumHand.MAIN_HAND, inv.insertItem(slot, player.getHeldItemMainhand(), false));
+					player.setHeldItem(EnumHand.MAIN_HAND, inv.insertItem(slot, player.getHeldItem(hand), false));
 					return true;
 				} else {
 					if (inv.insertItem(slot, stack, false).isEmpty()) {
-						player.getHeldItemMainhand().shrink(1);
+						player.getHeldItem(hand).shrink(1);
 						return true;
 					}
 				}
@@ -130,10 +129,6 @@ public abstract class BlockTile extends NCBlock implements ITileEntityProvider {
 		}
 		super.breakBlock(world, pos, state);
 		world.removeTileEntity(pos);
-	}
-	
-	public void dropItems(World world, BlockPos pos, IInventory tileentity) {
-		InventoryHelper.dropInventoryItems(world, pos, tileentity);
 	}
 	
 	@Override

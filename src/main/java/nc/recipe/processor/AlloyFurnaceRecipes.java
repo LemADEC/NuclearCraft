@@ -1,6 +1,6 @@
 package nc.recipe.processor;
 
-import static nc.util.FissionHelper.ISOTOPE_ORE_DICT;
+import static nc.util.FissionHelper.FISSION_ORE_DICT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +22,15 @@ public class AlloyFurnaceRecipes extends ProcessorRecipeHandler {
 	@Override
 	public void addRecipes() {
 		addAlloyIngotIngotRecipes("Copper", 3, "Tin", 1, "Bronze", 4, 1D, 1D);
-		addAlloyIngotCoalRecipes("Iron", 1, 4, "Steel", 1, 1D, 1D);
-		addAlloyIngotIngotRecipes("Iron", 1, "Graphite", 4, "Steel", 1, 1D, 1D);
+		if (OreDictHelper.oreExists("dustCoke") || OreDictHelper.oreExists("fuelCoke")) {
+			addAlloyIngotCoalRecipes("Iron", 1, 4, "Steel", 1, 1D, 1D);
+			addAlloyIngotIngotRecipes("Iron", 1, "Graphite", 4, "Steel", 1, 1D, 1D);
+			addAlloyIngotFuelRecipes("Iron", 1, "Coke", 1, "Steel", 1, 1D, 1D);
+		}
+		else {
+			addAlloyIngotCoalRecipes("Iron", 1, 2, "Steel", 1, 1D, 1D);
+			addAlloyIngotIngotRecipes("Iron", 1, "Graphite", 2, "Steel", 1, 1D, 1D);
+		}
 		addAlloyIngotIngotRecipes("Steel", 1, "Boron", 1, "Ferroboron", 2, 1D, 1.5D);
 		addAlloyIngotIngotRecipes("Ferroboron", 1, "Lithium", 1, "Tough", 2, 1.5D, 1.5D);
 		addAlloyIngotGemRecipes("Graphite", 2, "Diamond", 1, "HardCarbon", 2, 1D, 2D);
@@ -77,16 +84,13 @@ public class AlloyFurnaceRecipes extends ProcessorRecipeHandler {
 		// Gadgetry
 		addAlloyIngotDustRecipes("Gold", 1, "Redstone", 2, "ingotRedmetal", 1, 1D, 1D);
 		
-		// Immersive Engineering
-		addAlloyIngotFuelRecipes("Iron", 1, "Coke", 1, "Steel", 1, 1D, 1D);
-		
 		// Advanced Rocketry
 		addAlloyIngotIngotRecipes("Aluminum", 7, "Titanium", 3, "TitaniumAluminide", 3, 3D, 1D);
 		addAlloyIngotIngotRecipes("Aluminium", 7, "Titanium", 3, "TitaniumAluminide", 3, 3D, 1D);
 		addAlloyIngotIngotRecipes("Titanium", 1, "Iridium", 1, "TitaniumIridium", 2, 1.5D, 2D);
 		
-		// Fission Isotopes
-		addIsotopeZARecipes();
+		// Fission Materials
+		addFissionAlloyRecipes();
 	}
 	
 	public void addAlloyIngotIngotRecipes(String in1, int inSize1, String in2, int inSize2, String out, int outSize, double time, double power) {
@@ -117,20 +121,21 @@ public class AlloyFurnaceRecipes extends ProcessorRecipeHandler {
 		addRecipe(typeStackList(in1, OreDictHelper.BLOCK_VOLUME_TYPES, inSize1), typeStackList("Coal", OreDictHelper.BLOCK_VOLUME_TYPES, inSize2), oreStack("block" + out, outSize), time*9D, power);
 	}
 	
-	public void addIsotopeZARecipes() {
-		for (int i = 0; i < ISOTOPE_ORE_DICT.length; i++) {
-			addAlloyIngotIngotRecipes(ISOTOPE_ORE_DICT[i], 1, "Zirconium", 1, ISOTOPE_ORE_DICT[i] + "ZA", 1, 1D, 1D);
+	public void addFissionAlloyRecipes() {
+		for (int i = 0; i < FISSION_ORE_DICT.length; i++) {
+			addAlloyIngotIngotRecipes(FISSION_ORE_DICT[i], 1, "Zirconium", 1, FISSION_ORE_DICT[i] + "ZA", 1, 1D, 1D);
+			addAlloyIngotIngotRecipes(FISSION_ORE_DICT[i], 1, "Graphite", 1, FISSION_ORE_DICT[i] + "Carbide", 1, 1D, 1D);
 		}
 	}
 	
 	private static ArrayList<OreIngredient> typeStackList(String type, List<String> forms, int size) {
-		ArrayList<OreIngredient> list = new ArrayList<OreIngredient>();
+		ArrayList<OreIngredient> list = new ArrayList<>();
 		for (String form : forms) list.add(oreStack(form + type, size));
 		return list;
 	}
 	
 	private static final List<String> SILICON = Lists.newArrayList("itemSilicon", "ingotSilicon");
-	private static final List<Object> ENDER_PEARL = Lists.newArrayList(Items.ENDER_PEARL, "dustEnder");
+	private static final List ENDER_PEARL = Lists.newArrayList(Items.ENDER_PEARL, "dustEnder");
 	
 	private static List<String> metalList(String name) {
 		return Lists.newArrayList("ingot" + name, "dust" + name);
@@ -138,5 +143,14 @@ public class AlloyFurnaceRecipes extends ProcessorRecipeHandler {
 	
 	private static List<String> gemList(String name) {
 		return Lists.newArrayList("gem" + name, "dust" + name);
+	}
+	
+	@Override
+	public List fixExtras(List extras) {
+		List fixed = new ArrayList(3);
+		fixed.add(extras.size() > 0 && extras.get(0) instanceof Double ? (double) extras.get(0) : 1D);
+		fixed.add(extras.size() > 1 && extras.get(1) instanceof Double ? (double) extras.get(1) : 1D);
+		fixed.add(extras.size() > 2 && extras.get(2) instanceof Double ? (double) extras.get(2) : 0D);
+		return fixed;
 	}
 }

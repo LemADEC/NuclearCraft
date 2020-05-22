@@ -2,6 +2,7 @@ package nc.multiblock.heatExchanger.block;
 
 import nc.block.property.ISidedProperty;
 import nc.block.property.PropertySidedEnum;
+import nc.item.ItemMultitool;
 import nc.multiblock.heatExchanger.HeatExchangerTubeSetting;
 import nc.multiblock.heatExchanger.HeatExchangerTubeType;
 import nc.multiblock.heatExchanger.tile.TileHeatExchangerTube;
@@ -55,8 +56,9 @@ public class BlockHeatExchangerTube extends BlockHeatExchangerPart implements IS
 	
 	@Override
 	public HeatExchangerTubeSetting getProperty(IBlockAccess world, BlockPos pos, EnumFacing facing) {
-		if (world.getTileEntity(pos) instanceof TileHeatExchangerTube) {
-			return ((TileHeatExchangerTube) world.getTileEntity(pos)).getTubeSetting(facing);
+		TileEntity tile = world.getTileEntity(pos);
+		if (tile instanceof TileHeatExchangerTube) {
+			return ((TileHeatExchangerTube) tile).getTubeSetting(facing);
 		}
 		return HeatExchangerTubeSetting.DISABLED;
 	}
@@ -80,13 +82,19 @@ public class BlockHeatExchangerTube extends BlockHeatExchangerPart implements IS
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		if (hand != EnumHand.MAIN_HAND || player == null) return false;
 		
-		if (player.getHeldItemMainhand().isEmpty() && world.getTileEntity(pos) instanceof TileHeatExchangerTube) {
-			TileHeatExchangerTube tube = (TileHeatExchangerTube) world.getTileEntity(pos);
-			EnumFacing side = player.isSneaking() ? facing.getOpposite() : facing;
-			tube.toggleTubeSetting(side);
-			if (!world.isRemote) player.sendMessage(getToggleMessage(player, tube, side));
-			return true;
+		if (ItemMultitool.isMultitool(player.getHeldItem(hand))) {
+			TileEntity tile = world.getTileEntity(pos);
+			if (tile instanceof TileHeatExchangerTube) {
+				TileHeatExchangerTube tube = (TileHeatExchangerTube) tile;
+				EnumFacing side = player.isSneaking() ? facing.getOpposite() : facing;
+				tube.toggleTubeSetting(side);
+				if (!world.isRemote) {
+					player.sendMessage(getToggleMessage(player, tube, side));
+				}
+				return true;
+			}
 		}
+		
 		return super.onBlockActivated(world, pos, state, player, hand, facing, hitX, hitY, hitZ);
 	}
 	
@@ -108,9 +116,10 @@ public class BlockHeatExchangerTube extends BlockHeatExchangerPart implements IS
 	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		if (placementSide ==  null) return;
 		BlockPos from = pos.offset(placementSide);
-		if (world.getTileEntity(pos) instanceof TileHeatExchangerTube && world.getTileEntity(from) instanceof TileHeatExchangerTube) {
-			TileHeatExchangerTube tube = (TileHeatExchangerTube) world.getTileEntity(pos);
-			TileHeatExchangerTube other = (TileHeatExchangerTube) world.getTileEntity(from);
+		TileEntity tile = world.getTileEntity(pos), otherTile = world.getTileEntity(from);
+		if (tile instanceof TileHeatExchangerTube && otherTile instanceof TileHeatExchangerTube) {
+			TileHeatExchangerTube tube = (TileHeatExchangerTube) tile;
+			TileHeatExchangerTube other = (TileHeatExchangerTube) otherTile;
 			tube.setFluidConnections(FluidConnection.cloneArray(other.getFluidConnections()));
 			tube.setTubeSettings(other.getTubeSettings().clone());
 			tube.markDirtyAndNotify();

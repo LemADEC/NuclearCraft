@@ -1,10 +1,12 @@
 package nc;
 
+import java.util.List;
 import java.util.Locale;
 
+import com.google.common.collect.Lists;
+
 import nc.config.NCConfig;
-import nc.enumm.IFissionFuelEnum;
-import nc.enumm.IHeatSinkEnum;
+import nc.enumm.ICoolingComponentEnum;
 import nc.enumm.IMetaEnum;
 import nc.enumm.MetaEnums;
 import nc.multiblock.turbine.TurbineDynamoCoilType;
@@ -20,65 +22,93 @@ public class NCInfo {
 	
 	// Fission Fuel
 	
-	public static <T extends Enum<T> & IFissionFuelEnum> String[][] fuelRodInfo(T[] values) {
+	/*public static <T extends Enum<T> & IFissionFuelEnum> String[][] fissionFuelInfo(T[] values) {
 		String[][] info = new String[values.length][];
 		for (int i = 0; i < values.length; i++) {
-			info[i] = new String[] {
+			List<String> list = Lists.newArrayList(
 					Lang.localise("item." + Global.MOD_ID + ".fission_fuel.base_time.desc", UnitHelper.applyTimeUnit(values[i].getBaseTime()*NCConfig.fission_fuel_time_multiplier, 3)),
 					Lang.localise("item." + Global.MOD_ID + ".fission_fuel.base_heat.desc", UnitHelper.prefix(values[i].getBaseHeat(), 5, "H/t")),
 					Lang.localise("item." + Global.MOD_ID + ".fission_fuel.base_efficiency.desc", Math.round(100D*values[i].getBaseEfficiency()) + "%"),
 					Lang.localise("item." + Global.MOD_ID + ".fission_fuel.criticality.desc", values[i].getCriticality() + " N/t")
-					};
+					);
+			if (values[i].getSelfPriming()) {
+				list.add(Lang.localise("item." + Global.MOD_ID + ".fission_fuel.self_priming.desc"));
+			}
+			info[i] = list.toArray(new String[list.size()]);
 		}
 		return info;
+	}*/
+	
+	public static String[] fissionFuelInfo(ProcessorRecipe fuelInfo) {
+		List<String> list = Lists.newArrayList(
+				Lang.localise("info." + Global.MOD_ID + ".fission_fuel.desc"),
+				Lang.localise("info." + Global.MOD_ID + ".fission_fuel.base_time.desc", UnitHelper.applyTimeUnit(fuelInfo.getFissionFuelTime()*NCConfig.fission_fuel_time_multiplier, 3)),
+				Lang.localise("info." + Global.MOD_ID + ".fission_fuel.base_heat.desc", UnitHelper.prefix(fuelInfo.getFissionFuelHeat(), 5, "H/t")),
+				Lang.localise("info." + Global.MOD_ID + ".fission_fuel.base_efficiency.desc", Math.round(100D*fuelInfo.getFissionFuelEfficiency()) + "%"),
+				Lang.localise("info." + Global.MOD_ID + ".fission_fuel.criticality.desc", fuelInfo.getFissionFuelCriticality() + " N/t")
+				);
+		if (fuelInfo.getFissionFuelSelfPriming()) {
+			list.add(Lang.localise("info." + Global.MOD_ID + ".fission_fuel.self_priming.desc"));
+		}
+		return list.toArray(new String[list.size()]);
 	}
 	
 	// Fission Heat Sinks
 	
-	private static <T extends Enum<T> & IStringSerializable & IHeatSinkEnum> String[][] heatSinkFixedInfo(T[] values) {
+	private static <T extends Enum<T> & IStringSerializable & ICoolingComponentEnum> String[][] coolingFixedInfo(T[] values, String name) {
 		String[][] info = new String[values.length][];
 		for (int i = 0; i < values.length; i++) {
-			info[i] = new String[] {sinkCoolingRateString(values[i])};
+			info[i] = new String[] {coolingRateString(values[i], name)};
 		}
 		return info;
 	}
 	
-	private static <T extends Enum<T> & IHeatSinkEnum> String sinkCoolingRateString(T type) {
-		return Lang.localise("tile." + Global.MOD_ID + ".solid_fission_sink.cooling_rate") + " " + type.getCooling() + " H/t";
+	private static <T extends Enum<T> & ICoolingComponentEnum> String coolingRateString(T type, String name) {
+		return Lang.localise("tile." + Global.MOD_ID + "." + name + ".cooling_rate") + " " + type.getCooling() + " H/t";
 	}
 	
 	public static String[][] heatSinkFixedInfo() {
-		return heatSinkFixedInfo(MetaEnums.HeatSinkType.values());
+		return coolingFixedInfo(MetaEnums.HeatSinkType.values(), "solid_fission_sink");
 	}
 	
 	public static String[][] heatSinkFixedInfo2() {
-		return heatSinkFixedInfo(MetaEnums.HeatSinkType2.values());
+		return coolingFixedInfo(MetaEnums.HeatSinkType2.values(), "solid_fission_sink");
+	}
+	
+	public static String[][] coolantHeaterFixedInfo() {
+		return coolingFixedInfo(MetaEnums.CoolantHeaterType.values(), "salt_fission_heater");
+	}
+	
+	public static String[][] coolantHeaterFixedInfo2() {
+		return coolingFixedInfo(MetaEnums.CoolantHeaterType2.values(), "salt_fission_heater");
+	}
+	
+	public static <T extends Enum<T> & IStringSerializable & ICoolingComponentEnum> String[][] coolingInfo(T[] values, String name) {
+		String[][] info = new String[values.length][];
+		for (int i = 0; i < values.length; i++) {
+			info[i] = InfoHelper.formattedInfo(coolingInfoString(values[i], name));
+		}
+		return info;
+	}
+	
+	private static <T extends Enum<T> & IStringSerializable> String coolingInfoString(T type, String name) {
+		return Lang.localise("tile." + Global.MOD_ID + "." + name + "." + type.getName() + ".desc");
 	}
 	
 	public static String[][] heatSinkInfo() {
-		MetaEnums.HeatSinkType[] values = MetaEnums.HeatSinkType.values();
-		String[][] info = new String[values.length][];
-		for (int i = 0; i < values.length; i++) {
-			info[i] = InfoHelper.formattedInfo(sinkInfoString(values[i]));
-		}
-		return info;
+		return coolingInfo(MetaEnums.HeatSinkType.values(), "solid_fission_sink");
 	}
 	
 	public static String[][] heatSinkInfo2() {
-		MetaEnums.HeatSinkType2[] values = MetaEnums.HeatSinkType2.values();
-		String[][] info = new String[values.length][];
-		for (int i = 0; i < values.length; i++) {
-			info[i] = InfoHelper.formattedInfo(sinkInfoString2(values[i]));
-		}
-		return info;
+		return coolingInfo(MetaEnums.HeatSinkType2.values(), "solid_fission_sink2");
 	}
 	
-	private static String sinkInfoString(MetaEnums.HeatSinkType type) {
-		return Lang.localise("tile." + Global.MOD_ID + ".solid_fission_sink." + type.getName() + ".desc");
+	public static String[][] coolantHeaterInfo() {
+		return coolingInfo(MetaEnums.CoolantHeaterType.values(), "salt_fission_heater");
 	}
 	
-	private static String sinkInfoString2(MetaEnums.HeatSinkType2 type) {
-		return Lang.localise("tile." + Global.MOD_ID + ".solid_fission_sink2." + type.getName() + ".desc");
+	public static String[][] coolantHeaterInfo2() {
+		return coolingInfo(MetaEnums.CoolantHeaterType2.values(), "salt_fission_heater2");
 	}
 	
 	// Fission Neutron Sources
@@ -99,6 +129,29 @@ public class NCInfo {
 		String[][] info = new String[values.length][];
 		for (int i = 0; i < values.length; i++) {
 			info[i] = InfoHelper.formattedInfo(Lang.localise("tile." + Global.MOD_ID + ".fission_source.desc"));
+		}
+		return info;
+	}
+	
+	// Fission Neutron Shields
+	
+	public static String[][] neutronShieldFixedInfo() {
+		MetaEnums.NeutronShieldType[] values = MetaEnums.NeutronShieldType.values();
+		String[][] info = new String[values.length][];
+		for (int i = 0; i < values.length; i++) {
+			info[i] = new String[] {
+					Lang.localise("info." + Global.MOD_ID + ".fission_shield.heat_per_flux.fixd", UnitHelper.prefix(values[i].getHeatPerFlux(), 5, "H/t/N")),
+					Lang.localise("info." + Global.MOD_ID + ".fission_shield.efficiency.fixd", Math.round(100D*values[i].getEfficiency()) + "%"),
+					};
+		}
+		return info;
+	}
+	
+	public static String[][] neutronShieldInfo() {
+		MetaEnums.NeutronShieldType[] values = MetaEnums.NeutronShieldType.values();
+		String[][] info = new String[values.length][];
+		for (int i = 0; i < values.length; i++) {
+			info[i] = InfoHelper.formattedInfo(Lang.localise("tile." + Global.MOD_ID + ".fission_shield.desc"));
 		}
 		return info;
 	}

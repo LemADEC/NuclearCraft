@@ -2,15 +2,25 @@ package nc.multiblock;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import nc.Global;
 import nc.NuclearCraft;
 import nc.multiblock.network.MultiblockUpdatePacket;
+import nc.multiblock.tile.ITileMultiblockPart;
+import nc.multiblock.tile.TileBeefAbstract;
 import nc.network.PacketHandler;
+import nc.tile.fluid.ITileFluid;
+import nc.tile.internal.energy.EnergyStorage;
 import nc.tile.internal.fluid.Tank;
+import nc.tile.inventory.ITileInventory;
+import nc.util.SuperMap;
+import nc.util.SuperMap.SuperMapEntry;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,7 +41,7 @@ import net.minecraftforge.fml.common.FMLLog;
  * 
  * Subordinate TileEntities implement the IMultiblockPart class and, generally, should not have an update() loop.
  */
-public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
+public abstract class Multiblock<T extends ITileMultiblockPart, PACKET extends MultiblockUpdatePacket> {
 	public static final short DIMENSION_UNBOUNDED = -1;
 	
 	// Multiblock stuff - do not mess with
@@ -82,7 +92,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 	protected Multiblock(World world) {
 		// Multiblock stuff
 		WORLD = world;
-		connectedParts  = new ObjectOpenHashSet<ITileMultiblockPart>();
+		connectedParts  = new ObjectOpenHashSet<>();
 
 		referenceCoord = null;
 		assemblyState = AssemblyState.Disassembled;
@@ -95,7 +105,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 		
 		debugMode = false;
 		
-		playersToUpdate = new ObjectOpenHashSet<EntityPlayer>();
+		playersToUpdate = new ObjectOpenHashSet<>();
 	}
 
 	public void setDebugMode(boolean active) {
@@ -131,7 +141,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 		BlockPos coord = part.getTilePos();
 
 		if(!connectedParts.add(part))
-			FMLLog.warning("[%s] Multiblock %s is double-adding part %d @ %s. This is unusual. If you encounter odd behavior, please tear down the machine and rebuild it.",
+			FMLLog.warning("[%s] Multiblock %s is double-adding part %d @ %s. This is unusual. If you encounter odd behavior, please tear down the multiblock and rebuild it.",
 					(WORLD.isRemote ? "CLIENT" : "SERVER"), hashCode(), part.hashCode(), coord);
 
 		part.onAttached(this);
@@ -142,15 +152,14 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 			onAttachedPartWithMultiblockData(part, savedData);
 			part.onMultiblockDataAssimilated();
 		}
-		
-		if(this.referenceCoord == null) {
+
+		TileEntity te = referenceCoord == null ? null : WORLD.getTileEntity(referenceCoord);
+		if(!(te instanceof ITileMultiblockPart)) {
 			referenceCoord = coord;
 			part.becomeMultiblockSaveDelegate();
 		}
 		else if(coord.compareTo(referenceCoord) < 0) {
-			TileEntity te = this.WORLD.getTileEntity(referenceCoord);
 			((ITileMultiblockPart)te).forfeitMultiblockSaveDelegate();
-			
 			referenceCoord = coord;
 			part.becomeMultiblockSaveDelegate();
 		}
@@ -219,7 +228,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 	/**
 	 * Called when a machine is assembled from a disassembled state.
 	 */
-	protected abstract void onMachineAssembled();
+	protected abstract void onMachineAssembled(boolean wasAssembled);
 	
 	/**
 	 * Called when a machine is restored to the assembled state from a paused state.
@@ -275,7 +284,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 		if(!connectedParts.remove(part)) {
 			BlockPos position = part.getTilePos();
 
-			FMLLog.warning("[%s] Double-removing part (%d) @ %d, %d, %d, this is unexpected and may cause problems. If you encounter anomalies, please tear down the reactor and rebuild it.",
+			FMLLog.warning("[%s] Double-removing part (%d) @ %d, %d, %d, this is unexpected and may cause problems. If you encounter anomalies, please tear down the multiblock and rebuild it.",
 					this.WORLD.isRemote ? "CLIENT" : "SERVER", part.hashCode(), position.getX(), position.getY(), position.getZ());
 		}
 
@@ -409,7 +418,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 			onMachineRestored();
 		}
 		else {
-			onMachineAssembled();
+			onMachineAssembled(oldState == AssemblyState.Assembled);
 		}
 	}
 	
@@ -637,14 +646,14 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 	 * @param data the data
 	 * @param syncReason the reason why the synchronization is necessary
 	 */
-	protected abstract void syncDataFrom(NBTTagCompound data, TileBeefBase.SyncReason syncReason);
+	public abstract void syncDataFrom(NBTTagCompound data, TileBeefAbstract.SyncReason syncReason);
 	
 	/**
 	 * Sync multiblock data to the given NBT compound
 	 * @param data the data
 	 * @param syncReason the reason why the synchronization is necessary
 	 */
-	protected abstract void syncDataTo(NBTTagCompound data, TileBeefBase.SyncReason syncReason);
+	public abstract void syncDataTo(NBTTagCompound data, TileBeefAbstract.SyncReason syncReason);
 	
 	public NBTTagCompound writeStacks(NonNullList<ItemStack> stacks, NBTTagCompound data) {
 		ItemStackHelper.saveAllItems(data, stacks);
@@ -655,17 +664,26 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 		ItemStackHelper.loadAllItems(data, stacks);
 	}
 	
-	public NBTTagCompound writeTanks(List<Tank> tanks, NBTTagCompound data) {
+	public NBTTagCompound writeTanks(List<Tank> tanks, NBTTagCompound data, String name) {
 		for (int i = 0; i < tanks.size(); i++) {
-			tanks.get(i).writeToNBT(data, i);
+			tanks.get(i).writeToNBT(data, name + i);
 		}
 		return data;
 	}
 	
-	public void readTanks(List<Tank> tanks, NBTTagCompound data) {
+	public void readTanks(List<Tank> tanks, NBTTagCompound data, String name) {
 		for (int i = 0; i < tanks.size(); i++) {
-			tanks.get(i).readFromNBT(data, i);
+			tanks.get(i).readFromNBT(data, name + i);
 		}
+	}
+	
+	public NBTTagCompound writeEnergy(EnergyStorage storage, NBTTagCompound data, String string) {
+		storage.writeToNBT(data, string);
+		return data;
+	}
+	
+	public void readEnergy(EnergyStorage storage, NBTTagCompound data, String string) {
+		storage.readFromNBT(data, string);
 	}
 	
 	/**
@@ -845,7 +863,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 	 * Checks all of the parts in the multiblock. If any are dead or do not exist in the world, they are removed.
 	 */
 	private void auditParts() {
-		ObjectOpenHashSet<ITileMultiblockPart> deadParts = new ObjectOpenHashSet<ITileMultiblockPart>();
+		ObjectOpenHashSet<ITileMultiblockPart> deadParts = new ObjectOpenHashSet<>();
 		for(ITileMultiblockPart part : connectedParts) {
 			if(part.isPartInvalid() || WORLD.getTileEntity(part.getTilePos()) != part) {
 				onDetachBlock(part);
@@ -879,7 +897,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 		referenceCoord = null;
 		
 		// Reset visitations and find the minimum coordinate
-		Set<ITileMultiblockPart> deadParts = new ObjectOpenHashSet<ITileMultiblockPart>();
+		Set<ITileMultiblockPart> deadParts = new ObjectOpenHashSet<>();
 		BlockPos position;
 		ITileMultiblockPart referencePart = null;
 
@@ -928,7 +946,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 
 		// Now visit all connected parts, breadth-first, starting from reference coord's part
 		ITileMultiblockPart part;
-		LinkedList<ITileMultiblockPart> partsToCheck = new LinkedList<ITileMultiblockPart>();
+		LinkedList<ITileMultiblockPart> partsToCheck = new LinkedList<>();
 		ITileMultiblockPart[] nearbyParts = null;
 		int visitedParts = 0;
 
@@ -954,7 +972,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 		}
 		
 		// Finally, remove all parts that remain disconnected.
-		Set<ITileMultiblockPart> removedParts = new ObjectOpenHashSet<ITileMultiblockPart>();
+		Set<ITileMultiblockPart> removedParts = new ObjectOpenHashSet<>();
 		for(ITileMultiblockPart orphanCandidate : connectedParts) {
 			if (!orphanCandidate.isVisited()) {
 				deadParts.add(orphanCandidate);
@@ -987,7 +1005,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 	 * @return A set of all parts which still have a valid tile entity.
 	 */
 	public Set<ITileMultiblockPart> detachAllBlocks() {
-		if(WORLD == null) { return new ObjectOpenHashSet<ITileMultiblockPart>(); }
+		if(WORLD == null) { return new ObjectOpenHashSet<>(); }
 		
 		//IChunkProvider chunkProvider = WORLD.getChunkProvider();
 		for(ITileMultiblockPart part : connectedParts) {
@@ -997,7 +1015,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 		}
 
 		Set<ITileMultiblockPart> detachedParts = connectedParts;
-		connectedParts = new ObjectOpenHashSet<ITileMultiblockPart>();
+		connectedParts = new ObjectOpenHashSet<>();
 		return detachedParts;
 	}
 
@@ -1074,7 +1092,7 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 	/**
 	 * Marks the whole multiblock for a render update on the client. On the server, this does nothing
 	*/
-	protected void markMultiblockForRenderUpdate() {
+	public void markMultiblockForRenderUpdate() {
 		this.WORLD.markBlockRangeForRenderUpdate(this.getMinimumCoord(), this.getMaximumCoord());
 	}
 	
@@ -1120,6 +1138,59 @@ public abstract class Multiblock<PACKET extends MultiblockUpdatePacket> {
 			return;
 		}
 		PacketHandler.instance.sendToAll(getUpdatePacket());
+	}
+	
+	// Part SuperMap
+	
+	public static class PartSuperMap<T extends ITileMultiblockPart> extends SuperMap<Long, T, Long2ObjectMap<? extends T>> {
+		
+		@Override
+		public <TYPE extends T> Long2ObjectMap<? extends T> backup(Class<TYPE> clazz) {
+			return new Long2ObjectOpenHashMap<>();
+		}
+	}
+	
+	public abstract PartSuperMap<T> getPartSuperMap();
+	
+	public <TYPE extends T> Long2ObjectMap<TYPE> getPartMap(Class<TYPE> type) {
+		return getPartSuperMap().get(type);
+	}
+	
+	public void onPartAdded(ITileMultiblockPart newPart) {
+		for (Entry<Class<? extends T>, Long2ObjectMap<? extends T>> superMapEntryRaw : getPartSuperMap().entrySet()) {
+			addBlockForSuperMapEntry(new SuperMapEntry(superMapEntryRaw), newPart);
+		}
+	}
+	
+	public <TYPE extends T> void addBlockForSuperMapEntry(SuperMapEntry<Long, TYPE> superMapEntry, ITileMultiblockPart newPart) {
+		if (superMapEntry.getKey().isInstance(newPart)) {
+			superMapEntry.getValue().put(newPart.getTilePos().toLong(), superMapEntry.getKey().cast(newPart));
+		}
+	}
+	
+	public void onPartRemoved(ITileMultiblockPart oldPart) {
+		for (Entry<Class<? extends T>, Long2ObjectMap<? extends T>> superMapEntryRaw : getPartSuperMap().entrySet()) {
+			removeBlockForSuperMapEntry(new SuperMapEntry(superMapEntryRaw), oldPart);
+		}
+	}
+	
+	public <TYPE extends T> void removeBlockForSuperMapEntry(SuperMapEntry<Long, TYPE> superMapEntry, ITileMultiblockPart oldPart) {
+		if (superMapEntry.getKey().isInstance(oldPart)) {
+			superMapEntry.getValue().remove(oldPart.getTilePos().toLong());
+		}
+	}
+	
+	public void clearAllMaterial() {
+		for (Entry<Class<? extends T>, Long2ObjectMap<? extends T>> superMapEntryRaw : getPartSuperMap().entrySet()) {
+			for (T tile : superMapEntryRaw.getValue().values()) {
+				if (tile instanceof ITileInventory) {
+					((ITileInventory)tile).clearAllSlots();
+				}
+				if (tile instanceof ITileFluid) {
+					((ITileFluid)tile).clearAllTanks();
+				}
+			}
+		}
 	}
 	
 	// Registry

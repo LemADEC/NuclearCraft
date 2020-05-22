@@ -3,7 +3,6 @@ package nc.multiblock.fission.tile;
 import static nc.block.property.BlockProperties.FACING_ALL;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -15,7 +14,7 @@ import nc.ModCheck;
 import nc.config.NCConfig;
 import nc.multiblock.cuboidal.CuboidalPartPositionType;
 import nc.multiblock.fission.FissionReactor;
-import nc.multiblock.fission.solid.SolidFuelFissionLogic;
+import nc.multiblock.fission.block.BlockFissionVent;
 import nc.tile.fluid.ITileFluid;
 import nc.tile.internal.fluid.FluidConnection;
 import nc.tile.internal.fluid.FluidTileWrapper;
@@ -25,11 +24,16 @@ import nc.tile.internal.fluid.TankOutputSetting;
 import nc.tile.internal.fluid.TankSorption;
 import nc.tile.passive.ITilePassive;
 import nc.util.GasHelper;
+import nc.util.Lang;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -37,15 +41,13 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 
 public class TileFissionVent extends TileFissionPart implements ITileFluid {
 	
-	private final @Nonnull List<Tank> backupTanks = Lists.newArrayList(new Tank(1, new ArrayList<String>()), new Tank(1, new ArrayList<String>()));
+	private final @Nonnull List<Tank> backupTanks = Lists.newArrayList(new Tank(1, new ArrayList<>()), new Tank(1, new ArrayList<>()));
 	
-	private @Nonnull FluidConnection[] fluidConnections = ITileFluid.fluidConnectionAll(Arrays.asList(TankSorption.IN, TankSorption.OUT));
+	private @Nonnull FluidConnection[] fluidConnections = ITileFluid.fluidConnectionAll(Lists.newArrayList(TankSorption.IN, TankSorption.NON));
 	
 	private @Nonnull FluidTileWrapper[] fluidSides;
 	
 	private @Nonnull GasTileWrapper gasWrapper;
-	
-	protected int portCount;
 	
 	public TileFissionVent() {
 		super(CuboidalPartPositionType.WALL);
@@ -69,6 +71,13 @@ public class TileFissionVent extends TileFissionPart implements ITileFluid {
 		//getWorld().setBlockState(getPos(), getWorld().getBlockState(getPos()), 2);
 	}
 	
+	public void updateBlockState(boolean isActive) {
+		if (getBlockType() instanceof BlockFissionVent) {
+			((BlockFissionVent)getBlockType()).setState(isActive, this);
+			//world.notifyNeighborsOfStateChange(pos, getBlockType(), true);
+		}
+	}
+	
 	@Override
 	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
 		return oldState.getBlock() != newState.getBlock();
@@ -77,22 +86,19 @@ public class TileFissionVent extends TileFissionPart implements ITileFluid {
 	@Override
 	public void update() {
 		super.update();
-		/*if (!world.isRemote && getPartPosition().getFacing() != null && !getTanks().get(1).isEmpty()) {
-			pushFluidToSide(getPartPosition().getFacing());
-		}*/
+		EnumFacing facing = getPartPosition().getFacing();
+		if (!world.isRemote && !getTanks().get(1).isEmpty() && facing != null && getTankSorption(facing, 1).canDrain()) {
+			pushFluidToSide(facing);
+		}
 	}
 	
 	// Fluids
 	
 	@Override
-	@Nonnull
-	public List<Tank> getTanks() {
-		if (isMultiblockAssembled() && getMultiblock().getLogic() instanceof SolidFuelFissionLogic) {
-			return ((SolidFuelFissionLogic)getMultiblock().getLogic()).tanks;
-		}
-		return backupTanks;
+	public @Nonnull List<Tank> getTanks() {
+		return getMultiblock() != null ? getLogic().getVentTanks(backupTanks) : backupTanks;
 	}
-
+	
 	@Override
 	@Nonnull
 	public FluidConnection[] getFluidConnections() {
@@ -155,6 +161,43 @@ public class TileFissionVent extends TileFissionPart implements ITileFluid {
 	
 	@Override
 	public void setTankOutputSetting(int tankNumber, TankOutputSetting setting) {}
+	
+	@Override
+	public boolean hasConfigurableFluidConnections() {
+		return true;
+	}
+	
+	//IMultitoolLogic
+	
+	@Override
+	public boolean onUseMultitool(ItemStack multitoolStack, EntityPlayer player, World world, EnumFacing facing, float hitX, float hitY, float hitZ) {
+		if (player.isSneaking()) {
+			
+		}
+		else {
+			if (getMultiblock() != null) {
+				if (getTankSorption(facing, 0) != TankSorption.IN) {
+					for (EnumFacing side : EnumFacing.VALUES) {
+						setTankSorption(side, 0, TankSorption.IN);
+						setTankSorption(side, 1, TankSorption.NON);
+					}
+					updateBlockState(false);
+					player.sendMessage(new TextComponentString(Lang.localise("nc.block.vent_toggle") + " " + TextFormatting.DARK_AQUA + Lang.localise("nc.block.fission_vent_mode.input") + " " + TextFormatting.WHITE + Lang.localise("nc.block.vent_toggle.mode")));
+				}
+				else {
+					for (EnumFacing side : EnumFacing.VALUES) {
+						setTankSorption(side, 0, TankSorption.NON);
+						setTankSorption(side, 1, TankSorption.OUT);
+					}
+					updateBlockState(true);
+					player.sendMessage(new TextComponentString(Lang.localise("nc.block.vent_toggle") + " " + TextFormatting.RED + Lang.localise("nc.block.fission_vent_mode.output") + " " + TextFormatting.WHITE + Lang.localise("nc.block.vent_toggle.mode")));
+				}
+				markDirtyAndNotify();
+				return true;
+			}
+		}
+		return super.onUseMultitool(multitoolStack, player, world, facing, hitX, hitY, hitZ);
+	}
 	
 	// NBT
 	

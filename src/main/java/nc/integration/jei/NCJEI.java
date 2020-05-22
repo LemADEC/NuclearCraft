@@ -14,6 +14,7 @@ import mezz.jei.api.recipe.transfer.IRecipeTransferRegistry;
 import nc.ModCheck;
 import nc.config.NCConfig;
 import nc.container.processor.ContainerAlloyFurnace;
+import nc.container.processor.ContainerAssembler;
 import nc.container.processor.ContainerCentrifuge;
 import nc.container.processor.ContainerChemicalReactor;
 import nc.container.processor.ContainerCrystallizer;
@@ -24,16 +25,16 @@ import nc.container.processor.ContainerExtractor;
 import nc.container.processor.ContainerFuelReprocessor;
 import nc.container.processor.ContainerInfuser;
 import nc.container.processor.ContainerIngotFormer;
-import nc.container.processor.ContainerIrradiator;
-import nc.container.processor.ContainerIsotopeSeparator;
 import nc.container.processor.ContainerManufactory;
 import nc.container.processor.ContainerMelter;
 import nc.container.processor.ContainerPressurizer;
 import nc.container.processor.ContainerRockCrusher;
 import nc.container.processor.ContainerSaltMixer;
+import nc.container.processor.ContainerSeparator;
 import nc.container.processor.ContainerSupercooler;
 import nc.enumm.MetaEnums;
 import nc.gui.processor.GuiAlloyFurnace;
+import nc.gui.processor.GuiAssembler;
 import nc.gui.processor.GuiCentrifuge;
 import nc.gui.processor.GuiChemicalReactor;
 import nc.gui.processor.GuiCrystallizer;
@@ -44,13 +45,12 @@ import nc.gui.processor.GuiExtractor;
 import nc.gui.processor.GuiFuelReprocessor;
 import nc.gui.processor.GuiInfuser;
 import nc.gui.processor.GuiIngotFormer;
-import nc.gui.processor.GuiIrradiator;
-import nc.gui.processor.GuiIsotopeSeparator;
 import nc.gui.processor.GuiManufactory;
 import nc.gui.processor.GuiMelter;
 import nc.gui.processor.GuiPressurizer;
 import nc.gui.processor.GuiRockCrusher;
 import nc.gui.processor.GuiSaltMixer;
+import nc.gui.processor.GuiSeparator;
 import nc.gui.processor.GuiSupercooler;
 import nc.init.NCArmor;
 import nc.init.NCBlocks;
@@ -59,14 +59,18 @@ import nc.integration.jei.generator.DecayGeneratorCategory;
 import nc.integration.jei.multiblock.CondenserCategory;
 import nc.integration.jei.multiblock.CoolantHeaterCategory;
 import nc.integration.jei.multiblock.FissionHeatingCategory;
+import nc.integration.jei.multiblock.FissionIrradiatorCategory;
 import nc.integration.jei.multiblock.FissionModeratorCategory;
 import nc.integration.jei.multiblock.FissionReflectorCategory;
 import nc.integration.jei.multiblock.HeatExchangerCategory;
+import nc.integration.jei.multiblock.PebbleFissionCategory;
 import nc.integration.jei.multiblock.SaltFissionCategory;
 import nc.integration.jei.multiblock.SolidFissionCategory;
 import nc.integration.jei.multiblock.TurbineCategory;
 import nc.integration.jei.other.CollectorCategory;
+import nc.integration.jei.other.RadiationScrubberCategory;
 import nc.integration.jei.processor.AlloyFurnaceCategory;
+import nc.integration.jei.processor.AssemblerCategory;
 import nc.integration.jei.processor.CentrifugeCategory;
 import nc.integration.jei.processor.ChemicalReactorCategory;
 import nc.integration.jei.processor.CrystallizerCategory;
@@ -77,14 +81,21 @@ import nc.integration.jei.processor.ExtractorCategory;
 import nc.integration.jei.processor.FuelReprocessorCategory;
 import nc.integration.jei.processor.InfuserCategory;
 import nc.integration.jei.processor.IngotFormerCategory;
-import nc.integration.jei.processor.IrradiatorCategory;
-import nc.integration.jei.processor.IsotopeSeparatorCategory;
 import nc.integration.jei.processor.ManufactoryCategory;
 import nc.integration.jei.processor.MelterCategory;
 import nc.integration.jei.processor.PressurizerCategory;
 import nc.integration.jei.processor.RockCrusherCategory;
 import nc.integration.jei.processor.SaltMixerCategory;
+import nc.integration.jei.processor.SeparatorCategory;
 import nc.integration.jei.processor.SupercoolerCategory;
+import nc.multiblock.container.ContainerFissionIrradiator;
+import nc.multiblock.container.ContainerSaltFissionHeater;
+import nc.multiblock.container.ContainerSaltFissionVessel;
+import nc.multiblock.container.ContainerSolidFissionCell;
+import nc.multiblock.gui.GuiFissionIrradiator;
+import nc.multiblock.gui.GuiSaltFissionHeater;
+import nc.multiblock.gui.GuiSaltFissionVessel;
+import nc.multiblock.gui.GuiSolidFissionCell;
 import nc.recipe.NCRecipes;
 import nc.recipe.ProcessorRecipeHandler;
 import nc.util.ItemStackHelper;
@@ -118,16 +129,16 @@ public class NCJEI implements IModPlugin {
 			registry.addRecipeClickArea(GuiManufactory.SideConfig.class, 73, 34, 37, 18, JEIHandler.MANUFACTORY.getUUID());
 		}
 		if (NCConfig.register_processor[2]) {
-			registry.addRecipeClickArea(GuiIsotopeSeparator.class, 59, 34, 37, 18, JEIHandler.ISOTOPE_SEPARATOR.getUUID());
-			registry.addRecipeClickArea(GuiIsotopeSeparator.SideConfig.class, 59, 34, 37, 18, JEIHandler.ISOTOPE_SEPARATOR.getUUID());
+			registry.addRecipeClickArea(GuiSeparator.class, 59, 34, 37, 18, JEIHandler.SEPARATOR.getUUID());
+			registry.addRecipeClickArea(GuiSeparator.SideConfig.class, 59, 34, 37, 18, JEIHandler.SEPARATOR.getUUID());
 		}
 		if (NCConfig.register_processor[3]) {
 			registry.addRecipeClickArea(GuiDecayHastener.class, 73, 34, 37, 18, JEIHandler.DECAY_HASTENER.getUUID());
 			registry.addRecipeClickArea(GuiDecayHastener.SideConfig.class, 73, 34, 37, 18, JEIHandler.DECAY_HASTENER.getUUID());
 		}
 		if (NCConfig.register_processor[4]) {
-			registry.addRecipeClickArea(GuiFuelReprocessor.class, 67, 30, 37, 38, JEIHandler.FUEL_REPROCESSOR.getUUID());
-			registry.addRecipeClickArea(GuiFuelReprocessor.SideConfig.class, 67, 30, 37, 38, JEIHandler.FUEL_REPROCESSOR.getUUID());
+			registry.addRecipeClickArea(GuiFuelReprocessor.class, 57, 30, 37, 38, JEIHandler.FUEL_REPROCESSOR.getUUID());
+			registry.addRecipeClickArea(GuiFuelReprocessor.SideConfig.class, 57, 30, 37, 38, JEIHandler.FUEL_REPROCESSOR.getUUID());
 		}
 		if (NCConfig.register_processor[5]) {
 			registry.addRecipeClickArea(GuiAlloyFurnace.class, 83, 34, 37, 18, JEIHandler.ALLOY_FURNACE.getUUID());
@@ -150,8 +161,8 @@ public class NCJEI implements IModPlugin {
 			registry.addRecipeClickArea(GuiElectrolyzer.SideConfig.class, 67, 30, 37, 38, JEIHandler.ELECTROLYZER.getUUID());
 		}
 		if (NCConfig.register_processor[10]) {
-			registry.addRecipeClickArea(GuiIrradiator.class, 69, 34, 37, 18, JEIHandler.IRRADIATOR.getUUID());
-			registry.addRecipeClickArea(GuiIrradiator.SideConfig.class, 69, 34, 37, 18, JEIHandler.IRRADIATOR.getUUID());
+			registry.addRecipeClickArea(GuiAssembler.class, 83, 30, 37, 38, JEIHandler.ASSEMBLER.getUUID());
+			registry.addRecipeClickArea(GuiAssembler.SideConfig.class, 83, 30, 37, 38, JEIHandler.ASSEMBLER.getUUID());
 		}
 		if (NCConfig.register_processor[11]) {
 			registry.addRecipeClickArea(GuiIngotFormer.class, 73, 34, 37, 18, JEIHandler.INGOT_FORMER.getUUID());
@@ -189,11 +200,15 @@ public class NCJEI implements IModPlugin {
 			registry.addRecipeClickArea(GuiRockCrusher.class, 55, 34, 37, 18, JEIHandler.ROCK_CRUSHER.getUUID());
 			registry.addRecipeClickArea(GuiRockCrusher.SideConfig.class, 55, 34, 37, 18, JEIHandler.ROCK_CRUSHER.getUUID());
 		}
-		//registry.addRecipeClickArea(GuiFissionController.class, 73, 34, 37, 18, JEIHandler.SOLID_FISSION.getUUID());
-		//registry.addRecipeClickArea(GuiFusionCore.class, 47, 5, 121, 97, JEIHandler.SOLID_FISSION.getUUID());
+		
+		registry.addRecipeClickArea(GuiFissionIrradiator.class, 73, 34, 37, 18, JEIHandler.FISSION_IRRADIATOR.getUUID());
+		//registry.addRecipeClickArea(GuiPebbleFissionChamber.class, 73, 34, 37, 18, JEIHandler.PEBBLE_FISSION.getUUID());
+		registry.addRecipeClickArea(GuiSolidFissionCell.class, 73, 34, 37, 18, JEIHandler.SOLID_FISSION.getUUID());
+		registry.addRecipeClickArea(GuiSaltFissionVessel.class, 73, 34, 37, 18, JEIHandler.SALT_FISSION.getUUID());
+		registry.addRecipeClickArea(GuiSaltFissionHeater.class, 73, 34, 37, 18, JEIHandler.COOLANT_HEATER.getUUID());
 		
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerManufactory.class, JEIHandler.MANUFACTORY.getUUID(), 0, 1, 4, 36);
-		recipeTransferRegistry.addRecipeTransferHandler(ContainerIsotopeSeparator.class, JEIHandler.ISOTOPE_SEPARATOR.getUUID(), 0, 1, 5, 36);
+		recipeTransferRegistry.addRecipeTransferHandler(ContainerSeparator.class, JEIHandler.SEPARATOR.getUUID(), 0, 1, 5, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerDecayHastener.class, JEIHandler.DECAY_HASTENER.getUUID(), 0, 1, 4, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerFuelReprocessor.class, JEIHandler.FUEL_REPROCESSOR.getUUID(), 0, 1, 7, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerAlloyFurnace.class, JEIHandler.ALLOY_FURNACE.getUUID(), 0, 2, 5, 36);
@@ -201,7 +216,7 @@ public class NCJEI implements IModPlugin {
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerMelter.class, JEIHandler.MELTER.getUUID(), 0, 1, 3, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerSupercooler.class, JEIHandler.SUPERCOOLER.getUUID(), 0, 0, 2, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerElectrolyzer.class, JEIHandler.ELECTROLYZER.getUUID(), 0, 0, 2, 36);
-		recipeTransferRegistry.addRecipeTransferHandler(ContainerIrradiator.class, JEIHandler.IRRADIATOR.getUUID(), 0, 0, 2, 36);
+		recipeTransferRegistry.addRecipeTransferHandler(ContainerAssembler.class, JEIHandler.ASSEMBLER.getUUID(), 0, 4, 7, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerIngotFormer.class, JEIHandler.INGOT_FORMER.getUUID(), 0, 0, 3, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerPressurizer.class, JEIHandler.PRESSURIZER.getUUID(), 0, 1, 4, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerChemicalReactor.class, JEIHandler.CHEMICAL_REACTOR.getUUID(), 0, 0, 2, 36);
@@ -211,11 +226,15 @@ public class NCJEI implements IModPlugin {
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerExtractor.class, JEIHandler.EXTRACTOR.getUUID(), 0, 1, 4, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerCentrifuge.class, JEIHandler.CENTRIFUGE.getUUID(), 0, 0, 2, 36);
 		recipeTransferRegistry.addRecipeTransferHandler(ContainerRockCrusher.class, JEIHandler.ROCK_CRUSHER.getUUID(), 0, 1, 6, 36);
-		//recipeTransferRegistry.addRecipeTransferHandler(ContainerFissionController.class, JEIHandler.SOLID_FISSION.getUUID(), 0, 1, 3, 36);
-		//recipeTransferRegistry.addRecipeTransferHandler(ContainerFusionCore.class, JEIHandler.FUSION.getUUID(), 0, 0, 0, 36);
+		
+		recipeTransferRegistry.addRecipeTransferHandler(ContainerFissionIrradiator.class, JEIHandler.FISSION_IRRADIATOR.getUUID(), 0, 1, 2, 36);
+		//recipeTransferRegistry.addRecipeTransferHandler(ContainerPebbleFissionChamber.class, JEIHandler.PEBBLE_FISSION.getUUID(), 0, 1, 2, 36);
+		recipeTransferRegistry.addRecipeTransferHandler(ContainerSolidFissionCell.class, JEIHandler.SOLID_FISSION.getUUID(), 0, 1, 2, 36);
+		recipeTransferRegistry.addRecipeTransferHandler(ContainerSaltFissionVessel.class, JEIHandler.SALT_FISSION.getUUID(), 0, 0, 0, 36);
+		recipeTransferRegistry.addRecipeTransferHandler(ContainerSaltFissionHeater.class, JEIHandler.COOLANT_HEATER.getUUID(), 0, 0, 0, 36);
 		
 		for (int i = 0; i < MetaEnums.OreType.values().length; i++) {
-			if (!NCConfig.ore_gen[i] && NCConfig.hide_disabled_ores) {
+			if (!NCConfig.ore_gen[i] && NCConfig.ore_hide_disabled) {
 				blacklist(jeiHelpers, new ItemStack(NCBlocks.ore, 1, i), new ItemStack(NCBlocks.ingot_block, 1, i), new ItemStack(NCItems.ingot, 1, i), new ItemStack(NCItems.dust, 1, i));
 			}
 		}
@@ -244,7 +263,7 @@ public class NCJEI implements IModPlugin {
 		
 		blacklist(jeiHelpers, NCItems.foursmore);
 		
-		NCUtil.getLogger().info("JEI integration complete");
+		NCUtil.getLogger().info("JEI integration complete!");
 	}
 	
 	private static void blacklist(IJeiHelpers jeiHelpers, Object... items) {
@@ -266,7 +285,7 @@ public class NCJEI implements IModPlugin {
 	
 	public enum JEIHandler implements IJEIHandler {
 		MANUFACTORY(NCRecipes.manufactory, NCBlocks.manufactory, "manufactory", JEIRecipeWrapper.Manufactory.class, 1),
-		ISOTOPE_SEPARATOR(NCRecipes.isotope_separator, NCBlocks.isotope_separator, "isotope_separator", JEIRecipeWrapper.IsotopeSeparator.class, 2),
+		SEPARATOR(NCRecipes.separator, NCBlocks.separator, "separator", JEIRecipeWrapper.Separator.class, 2),
 		DECAY_HASTENER(NCRecipes.decay_hastener, NCBlocks.decay_hastener, "decay_hastener", JEIRecipeWrapper.DecayHastener.class, 3),
 		FUEL_REPROCESSOR(NCRecipes.fuel_reprocessor, NCBlocks.fuel_reprocessor, "fuel_reprocessor", JEIRecipeWrapper.FuelReprocessor.class, 4),
 		ALLOY_FURNACE(NCRecipes.alloy_furnace, NCBlocks.alloy_furnace, "alloy_furnace", JEIRecipeWrapper.AlloyFurnace.class, 5),
@@ -274,7 +293,7 @@ public class NCJEI implements IModPlugin {
 		MELTER(NCRecipes.melter, NCBlocks.melter, "melter", JEIRecipeWrapper.Melter.class, 7),
 		SUPERCOOLER(NCRecipes.supercooler, NCBlocks.supercooler, "supercooler", JEIRecipeWrapper.Supercooler.class, 8),
 		ELECTROLYZER(NCRecipes.electrolyzer, NCBlocks.electrolyzer, "electrolyzer", JEIRecipeWrapper.Electrolyzer.class, 9),
-		IRRADIATOR(NCRecipes.irradiator, NCBlocks.irradiator, "irradiator", JEIRecipeWrapper.Irradiator.class, 10),
+		ASSEMBLER(NCRecipes.assembler, NCBlocks.assembler, "assembler", JEIRecipeWrapper.Assembler.class, 10),
 		INGOT_FORMER(NCRecipes.ingot_former, NCBlocks.ingot_former, "ingot_former", JEIRecipeWrapper.IngotFormer.class, 11),
 		PRESSURIZER(NCRecipes.pressurizer, NCBlocks.pressurizer, "pressurizer", JEIRecipeWrapper.Pressurizer.class, 12),
 		CHEMICAL_REACTOR(NCRecipes.chemical_reactor, NCBlocks.chemical_reactor, "chemical_reactor", JEIRecipeWrapper.ChemicalReactor.class, 13),
@@ -288,14 +307,17 @@ public class NCJEI implements IModPlugin {
 		DECAY_GENERATOR(NCRecipes.decay_generator, NCBlocks.decay_generator, "decay_generator", JEIRecipeWrapper.DecayGenerator.class),
 		FISSION_MODERATOR(NCRecipes.fission_moderator, NCBlocks.heavy_water_moderator, "fission_moderator", JEIRecipeWrapper.FissionModerator.class),
 		FISSION_REFLECTOR(NCRecipes.fission_reflector, NCBlocks.fission_reflector, "fission_reflector", JEIRecipeWrapper.FissionReflector.class),
+		FISSION_IRRADIATOR(NCRecipes.fission_irradiator, NCBlocks.fission_irradiator, "fission_irradiator", JEIRecipeWrapper.FissionIrradiator.class),
+		PEBBLE_FISSION(NCRecipes.pebble_fission, Lists.newArrayList(), "pebble_fission", JEIRecipeWrapper.PebbleFission.class),
 		SOLID_FISSION(NCRecipes.solid_fission, Lists.newArrayList(NCBlocks.solid_fission_controller, NCBlocks.solid_fission_cell), "solid_fission", JEIRecipeWrapper.SolidFission.class),
 		FISSION_HEATING(NCRecipes.fission_heating, NCBlocks.fission_vent, "fission_heating", JEIRecipeWrapper.FissionHeating.class),
 		SALT_FISSION(NCRecipes.salt_fission, Lists.newArrayList(NCBlocks.salt_fission_controller, NCBlocks.salt_fission_vessel), "salt_fission", JEIRecipeWrapper.SaltFission.class),
 		//FUSION(NCRecipes.fusion, NCBlocks.fusion_core, "fusion_core", JEIRecipeWrapper.Fusion.class),
-		COOLANT_HEATER(NCRecipes.coolant_heater, NCBlocks.salt_fission_heater, "coolant_heater", JEIRecipeWrapper.CoolantHeater.class),
+		COOLANT_HEATER(NCRecipes.coolant_heater, coolantHeaters(), "coolant_heater", JEIRecipeWrapper.CoolantHeater.class),
 		HEAT_EXCHANGER(NCRecipes.heat_exchanger, Lists.newArrayList(NCBlocks.heat_exchanger_tube_copper, NCBlocks.heat_exchanger_tube_hard_carbon, NCBlocks.heat_exchanger_tube_thermoconducting), "heat_exchanger", JEIRecipeWrapper.HeatExchanger.class),
+		CONDENSER(NCRecipes.condenser, Lists.newArrayList(NCBlocks.condenser_tube_copper, NCBlocks.condenser_tube_hard_carbon, NCBlocks.condenser_tube_thermoconducting), "condenser", JEIRecipeWrapper.Condenser.class),
 		TURBINE(NCRecipes.turbine, NCBlocks.turbine_controller, "turbine", JEIRecipeWrapper.Turbine.class),
-		CONDENSER(NCRecipes.condenser, Lists.newArrayList(NCBlocks.condenser_tube_copper, NCBlocks.condenser_tube_hard_carbon, NCBlocks.condenser_tube_thermoconducting), "condenser", JEIRecipeWrapper.Condenser.class);
+		RADIATION_SCRUBBER(NCRecipes.radiation_scrubber, NCBlocks.radiation_scrubber, "radiation_scrubber", JEIRecipeWrapper.RadiationScrubber.class);
 		
 		private ProcessorRecipeHandler recipeHandler;
 		private Class<? extends JEIRecipeWrapperAbstract> recipeWrapper;
@@ -303,24 +325,23 @@ public class NCJEI implements IModPlugin {
 		private List<ItemStack> crafters;
 		private String textureName;
 		
-		JEIHandler(ProcessorRecipeHandler recipeHandler, Block crafter, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper) {
-			this(recipeHandler, Lists.newArrayList(crafter), textureName, recipeWrapper);
+		JEIHandler(ProcessorRecipeHandler recipeHandler, Object crafter, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper) {
+			this(recipeHandler, crafter, textureName, recipeWrapper, -1);
 		}
 		
-		JEIHandler(ProcessorRecipeHandler recipeHandler, List<Block> crafters, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper) {
+		JEIHandler(ProcessorRecipeHandler recipeHandler, List<?> crafters, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper) {
 			this(recipeHandler, crafters, textureName, recipeWrapper, -1);
 		}
 		
-		JEIHandler(ProcessorRecipeHandler recipeHandler, Block crafter, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper, int enabled) {
+		JEIHandler(ProcessorRecipeHandler recipeHandler, Object crafter, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper, int enabled) {
 			this(recipeHandler, Lists.newArrayList(crafter), textureName, recipeWrapper, enabled);
 		}
 		
-		JEIHandler(ProcessorRecipeHandler recipeHandler, List<Block> crafters, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper, int enabled) {
+		JEIHandler(ProcessorRecipeHandler recipeHandler, List<?> crafters, String textureName, Class<? extends JEIRecipeWrapperAbstract> recipeWrapper, int enabled) {
 			this.recipeHandler = recipeHandler;
 			this.recipeWrapper = recipeWrapper;
 			this.enabled = enabled < 0 ? true : NCConfig.register_processor[enabled];
-			this.crafters = new ArrayList<ItemStack>();
-			if (this.enabled) for (Block crafter : crafters) this.crafters.add(ItemStackHelper.fixItemStack(crafter));
+			this.crafters = this.enabled ? fixStacks(crafters) : new ArrayList<>();
 			this.textureName = textureName;
 		}
 		
@@ -329,8 +350,8 @@ public class NCJEI implements IModPlugin {
 			switch (this) {
 			case MANUFACTORY:
 				return new ManufactoryCategory(guiHelper, this);
-			case ISOTOPE_SEPARATOR:
-				return new IsotopeSeparatorCategory(guiHelper, this);
+			case SEPARATOR:
+				return new SeparatorCategory(guiHelper, this);
 			case DECAY_HASTENER:
 				return new DecayHastenerCategory(guiHelper, this);
 			case FUEL_REPROCESSOR:
@@ -345,8 +366,8 @@ public class NCJEI implements IModPlugin {
 				return new SupercoolerCategory(guiHelper, this);
 			case ELECTROLYZER:
 				return new ElectrolyzerCategory(guiHelper, this);
-			case IRRADIATOR:
-				return new IrradiatorCategory(guiHelper, this);
+			case ASSEMBLER:
+				return new AssemblerCategory(guiHelper, this);
 			case INGOT_FORMER:
 				return new IngotFormerCategory(guiHelper, this);
 			case PRESSURIZER:
@@ -373,6 +394,10 @@ public class NCJEI implements IModPlugin {
 				return new FissionModeratorCategory(guiHelper, this);
 			case FISSION_REFLECTOR:
 				return new FissionReflectorCategory(guiHelper, this);
+			case FISSION_IRRADIATOR:
+				return new FissionIrradiatorCategory(guiHelper, this);
+			case PEBBLE_FISSION:
+				return new PebbleFissionCategory(guiHelper, this);
 			case SOLID_FISSION:
 				return new SolidFissionCategory(guiHelper, this);
 			case FISSION_HEATING:
@@ -385,10 +410,12 @@ public class NCJEI implements IModPlugin {
 				return new CoolantHeaterCategory(guiHelper, this);
 			case HEAT_EXCHANGER:
 				return new HeatExchangerCategory(guiHelper, this);
-			case CONDENSER:
-				return new CondenserCategory(guiHelper, this);
 			case TURBINE:
 				return new TurbineCategory(guiHelper, this);
+			case CONDENSER:
+				return new CondenserCategory(guiHelper, this);
+			case RADIATION_SCRUBBER:
+				return new RadiationScrubberCategory(guiHelper, this);
 			default:
 				return null;
 			}
@@ -431,6 +458,14 @@ public class NCJEI implements IModPlugin {
 		}
 	}
 	
+	private static List<ItemStack> fixStacks(List<?> list) {
+		List<ItemStack> stacks = new ArrayList<>();
+		for (Object obj : list) {
+			stacks.add(ItemStackHelper.fixItemStack(obj));
+		}
+		return stacks;
+	}
+	
 	private static List<Block> registeredCollectors() {
 		List<Block> list = new ArrayList<>();
 		if (NCConfig.register_passive[0]) {
@@ -447,6 +482,17 @@ public class NCJEI implements IModPlugin {
 			list.add(NCBlocks.nitrogen_collector);
 			list.add(NCBlocks.nitrogen_collector_compact);
 			list.add(NCBlocks.nitrogen_collector_dense);
+		}
+		return list;
+	}
+	
+	private static List<ItemStack> coolantHeaters() {
+		List<ItemStack> list = new ArrayList<>();
+		for (int i = 0; i < MetaEnums.CoolantHeaterType.values().length; i++) {
+			list.add(new ItemStack(NCBlocks.salt_fission_heater, 1, i));
+		}
+		for (int i = 0; i < MetaEnums.CoolantHeaterType2.values().length; i++) {
+			list.add(new ItemStack(NCBlocks.salt_fission_heater2, 1, i));
 		}
 		return list;
 	}

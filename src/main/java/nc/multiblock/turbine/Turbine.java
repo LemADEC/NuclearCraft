@@ -1,24 +1,28 @@
 package nc.multiblock.turbine;
 
-import java.util.ArrayList;
+import java.lang.reflect.Constructor;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.Lists;
 
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import nc.Global;
 import nc.handler.SoundHandler.SoundInfo;
 import nc.multiblock.ILogicMultiblock;
-import nc.multiblock.ITileMultiblockPart;
 import nc.multiblock.Multiblock;
-import nc.multiblock.TileBeefBase.SyncReason;
 import nc.multiblock.container.ContainerTurbineController;
 import nc.multiblock.cuboidal.CuboidalMultiblock;
 import nc.multiblock.network.TurbineRenderPacket;
 import nc.multiblock.network.TurbineUpdatePacket;
+import nc.multiblock.tile.ITileMultiblockPart;
+import nc.multiblock.tile.TileBeefAbstract.SyncReason;
 import nc.multiblock.turbine.TurbineRotorBladeUtil.ITurbineRotorBlade;
 import nc.multiblock.turbine.TurbineRotorBladeUtil.TurbinePartDir;
 import nc.multiblock.turbine.tile.ITurbineController;
@@ -40,13 +44,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements ILogicMultiblock<TurbineLogic, ITurbinePart> {
+public class Turbine extends CuboidalMultiblock<ITurbinePart, TurbineUpdatePacket> implements ILogicMultiblock<TurbineLogic, ITurbinePart> {
 	
 	public static final ObjectSet<Class<? extends ITurbinePart>> PART_CLASSES = new ObjectOpenHashSet<>();
+	public static final Object2ObjectMap<String, Constructor<? extends TurbineLogic>> LOGIC_MAP = new Object2ObjectOpenHashMap<>();
 	
 	protected @Nonnull TurbineLogic logic = new TurbineLogic(this);
-	
-	protected @Nonnull NBTTagCompound cachedData = new NBTTagCompound();
 	
 	protected final PartSuperMap<ITurbinePart> partSuperMap = new PartSuperMap<>();
 	
@@ -59,13 +62,13 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 	public static final ProcessorRecipeHandler RECIPE_HANDLER = NCRecipes.turbine;
 	public RecipeInfo<ProcessorRecipe> recipeInfo;
 	
-	public boolean logicInit, isTurbineOn, computerActivated, isProcessing;
+	public boolean isTurbineOn, computerActivated, isProcessing;
 	public double power = 0D, conductivity = 0D;
-	public double rawPower = 0D, rawMaxPower = 0D;
+	public double rawPower = 0D, rawLimitPower = 0D, rawMaxPower = 0D;
 	public EnumFacing flowDir = null;
 	public int shaftWidth = 0, inertia = 0, bladeLength = 0, noBladeSets = 0, recipeInputRate = 0, dynamoCoilCount = 0, dynamoCoilCountOpposite = 0;
-	public double totalExpansionLevel = 1D, idealTotalExpansionLevel = 1D, basePowerPerMB = 0D, recipeInputRateFP = 0D;
-	public List<Double> expansionLevels = new ArrayList<Double>(), rawBladeEfficiencies = new ArrayList<Double>();
+	public double totalExpansionLevel = 1D, idealTotalExpansionLevel = 1D, basePowerPerMB = 0D, recipeInputRateFP = 0D, maxBladeExpansionCoefficient = 1D, bearingTension = 0D;
+	public DoubleList expansionLevels = new DoubleArrayList(), rawBladeEfficiencies = new DoubleArrayList();
 	
 	@SideOnly(Side.CLIENT)
 	public List<SoundInfo> activeSounds;
@@ -89,6 +92,12 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 	@Override
 	public @Nonnull TurbineLogic getLogic() {
 		return logic;
+	}
+	
+	@Override
+	public void setLogic(String logicID) {
+		if (logicID.equals(logic.getID())) return;
+		logic = getNewLogic(LOGIC_MAP.get(logicID));
 	}
 	
 	// Multiblock Part Getters
@@ -136,8 +145,8 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 	}
 	
 	@Override
-	protected void onMachineAssembled() {
-		logic.onMachineAssembled();
+	protected void onMachineAssembled(boolean wasAssembled) {
+		logic.onMachineAssembled(wasAssembled);
 	}
 	
 	@Override
@@ -174,16 +183,17 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 			controller = contr;
 		}
 		
-		logicInit = logic.getClass() == controller.getLogicClass();
-		if (!logicInit) {
-			logic.unload();
-			logic = controller.createNewLogic(logic);
-			syncDataFrom(cachedData, SyncReason.FullSync);
-			cachedData = new NBTTagCompound();
-			logic.load();
-		}
+		setLogic(controller.getLogicID());
 		
-		return logicInit = true;
+		return true;
+	}
+	
+	@Override
+	public void checkIfMachineIsWhole() {
+		super.checkIfMachineIsWhole();
+		if (WORLD.isRemote && assemblyState != AssemblyState.Assembled) {
+			logic.stopSounds();
+		}
 	}
 	
 	@Override
@@ -200,8 +210,12 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 		return getInteriorLength(flowDir);
 	}
 	
+	protected int getBladeArea() {
+		return 4*shaftWidth*bladeLength;
+	}
+	
 	protected int getBladeVolume() {
-		return 4*shaftWidth*bladeLength*noBladeSets;
+		return getBladeArea()*noBladeSets;
 	}
 	
 	public double getRotorRadius() {
@@ -266,9 +280,12 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 	
 	@Override
 	protected boolean updateServer() {
+		boolean flag = false;
 		//setIsTurbineOn();
-		logic.onUpdateServer();
-		return true;
+		if (logic.onUpdateServer()) {
+			flag = true;
+		}
+		return flag;
 	}
 	
 	// Client
@@ -281,13 +298,14 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 	// NBT
 	
 	@Override
-	protected void syncDataTo(NBTTagCompound data, SyncReason syncReason) {
-		energyStorage.writeToNBT(data);
-		writeTanks(tanks, data);
+	public void syncDataTo(NBTTagCompound data, SyncReason syncReason) {
+		writeEnergy(energyStorage, data, "energyStorage");
+		writeTanks(tanks, data, "tanks");
 		data.setBoolean("isTurbineOn", isTurbineOn);
 		data.setBoolean("computerActivated", computerActivated);
 		data.setDouble("power", power);
 		data.setDouble("rawPower", rawPower);
+		data.setDouble("rawLimitPower", rawLimitPower);
 		data.setDouble("rawMaxPower", rawMaxPower);
 		data.setDouble("conductivity", conductivity);
 		data.setString("particleEffect", particleEffect);
@@ -305,23 +323,26 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 		data.setDouble("idealTotalExpansionLevel", idealTotalExpansionLevel);
 		data.setDouble("basePowerPerMB", basePowerPerMB);
 		data.setDouble("recipeInputRateFP", recipeInputRateFP);
+		data.setDouble("maxBladeExpansionCoefficient", maxBladeExpansionCoefficient);
+		data.setDouble("bearingTension", bearingTension);
 		data.setInteger("expansionLevelsSize", expansionLevels.size());
 		for (int i = 0; i < expansionLevels.size(); i++) data.setDouble("expansionLevels" + i, expansionLevels.get(i));
 		data.setInteger("rawBladeEfficienciesSize", rawBladeEfficiencies.size());
 		for (int i = 0; i < rawBladeEfficiencies.size(); i++) data.setDouble("rawBladeEfficiencies" + i, rawBladeEfficiencies.get(i));
 		data.setBoolean("isProcessing", isProcessing);
 		
-		logic.writeToNBT(data, syncReason);
+		writeLogicNBT(data, syncReason);
 	}
 	
 	@Override
-	protected void syncDataFrom(NBTTagCompound data, SyncReason syncReason) {
-		energyStorage.readFromNBT(data);
-		readTanks(tanks, data);
+	public void syncDataFrom(NBTTagCompound data, SyncReason syncReason) {
+		readEnergy(energyStorage, data, "energyStorage");
+		readTanks(tanks, data, "turbineTanks");
 		isTurbineOn = data.getBoolean("isTurbineOn");
 		computerActivated = data.getBoolean("computerActivated");
 		power = data.getDouble("power");
 		rawPower = data.getDouble("rawPower");
+		rawLimitPower = data.getDouble("rawLimitPower");
 		rawMaxPower = data.getDouble("rawMaxPower");
 		conductivity = data.getDouble("conductivity");
 		particleEffect = data.getString("particleEffect");
@@ -339,21 +360,19 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 		idealTotalExpansionLevel = data.getDouble("idealTotalExpansionLevel");
 		basePowerPerMB = data.getDouble("basePowerPerMB");
 		recipeInputRateFP = data.getDouble("recipeInputRateFP");
-		expansionLevels = new ArrayList<Double>();
+		maxBladeExpansionCoefficient = data.getDouble("maxBladeExpansionCoefficient");
+		bearingTension = data.getDouble("bearingTension");
+		expansionLevels = new DoubleArrayList();
 		if (data.hasKey("expansionLevelsSize")) for (int i = 0; i < data.getInteger("expansionLevelsSize"); i++) {
 			expansionLevels.add(data.getDouble("expansionLevels" + i));
 		}
-		rawBladeEfficiencies = new ArrayList<Double>();
+		rawBladeEfficiencies = new DoubleArrayList();
 		if (data.hasKey("rawBladeEfficienciesSize")) for (int i = 0; i < data.getInteger("rawBladeEfficienciesSize"); i++) {
 			rawBladeEfficiencies.add(data.getDouble("rawBladeEfficiencies" + i));
 		}
 		isProcessing = data.getBoolean("isProcessing");
 		
-		if (!logicInit) {
-			cachedData = data.copy();
-			logicInit = true;
-		}
-		logic.readFromNBT(data, syncReason);
+		readLogicNBT(data, syncReason);
 	}
 	
 	// Packets
@@ -379,6 +398,7 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 		noBladeSets = message.noBladeSets;
 		dynamoCoilCount = message.dynamoCoilCount;
 		dynamoCoilCountOpposite = message.dynamoCoilCountOpposite;
+		bearingTension = message.bearingTension;
 		
 		logic.onPacket(message);
 	}
@@ -412,7 +432,7 @@ public class Turbine extends CuboidalMultiblock<TurbineUpdatePacket> implements 
 		
 		logic.clearAllMaterial();
 		
-		ILogicMultiblock.super.clearAllMaterial();
+		super.clearAllMaterial();
 	}
 	
 	// Multiblock Validators

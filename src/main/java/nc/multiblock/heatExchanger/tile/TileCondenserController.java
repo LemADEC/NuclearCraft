@@ -3,9 +3,7 @@ package nc.multiblock.heatExchanger.tile;
 import static nc.block.property.BlockProperties.FACING_ALL;
 
 import nc.multiblock.cuboidal.CuboidalPartPositionType;
-import nc.multiblock.heatExchanger.CondenserLogic;
 import nc.multiblock.heatExchanger.HeatExchanger;
-import nc.multiblock.heatExchanger.HeatExchangerLogic;
 import nc.multiblock.heatExchanger.block.BlockCondenserController;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -18,13 +16,8 @@ public class TileCondenserController extends TileHeatExchangerPart implements IH
 	}
 	
 	@Override
-	public Class<? extends HeatExchangerLogic> getLogicClass() {
-		return CondenserLogic.class;
-	}
-	
-	@Override
-	public HeatExchangerLogic createNewLogic(HeatExchangerLogic oldLogic) {
-		return new CondenserLogic(oldLogic);
+	public String getLogicID() {
+		return "condenser";
 	}
 	
 	@Override
@@ -52,6 +45,11 @@ public class TileCondenserController extends TileHeatExchangerPart implements IH
 	public void onBlockNeighborChanged(IBlockState state, World world, BlockPos pos, BlockPos fromPos) {
 		super.onBlockNeighborChanged(state, world, pos, fromPos);
 		if (getMultiblock() != null) getMultiblock().setIsHeatExchangerOn();
+	}
+	
+	@Override
+	public int[] weakSidesToCheck(World world, BlockPos pos) {
+		return new int[] {2, 3, 4, 5};
 	}
 	
 	@Override

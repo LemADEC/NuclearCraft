@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import nc.block.tile.IActivatable;
 import nc.capability.radiation.source.IRadiationSource;
 import nc.capability.radiation.source.RadiationSource;
+import nc.util.NCMath;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
@@ -18,6 +19,9 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class NCTile extends TileEntity implements ITickable, ITile {
 	
@@ -79,7 +83,7 @@ public abstract class NCTile extends TileEntity implements ITickable, ITile {
 	
 	@Override
 	public ITextComponent getDisplayName() {
-		if (getBlockType() != null) return new TextComponentTranslation(getBlockType().getLocalizedName()); else return null;
+		return getBlockType() == null ? null : new TextComponentTranslation(getBlockType().getLocalizedName());
 	}
 	
 	@Override
@@ -94,9 +98,8 @@ public abstract class NCTile extends TileEntity implements ITickable, ITile {
 		}
 	}
 	
-	/** Never override this! */
 	@Override
-	public void markTileDirty() {
+	public final void markTileDirty() {
 		markDirty();
 	}
 	
@@ -233,5 +236,13 @@ public abstract class NCTile extends TileEntity implements ITickable, ITile {
 	
 	protected <T> T getCapabilityDefault(Capability<T> capability, @Nullable EnumFacing side) {
 		return super.getCapability(capability, side);
+	}
+	
+	// TESR
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public double getMaxRenderDistanceSquared() {
+		return NCMath.sq(0.92D*16D*FMLClientHandler.instance().getClient().gameSettings.renderDistanceChunks);
 	}
 }

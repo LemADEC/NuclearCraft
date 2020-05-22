@@ -1,6 +1,7 @@
 package nc.tile.processor;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,7 +12,9 @@ import nc.Global;
 import nc.block.tile.IActivatable;
 import nc.capability.radiation.source.IRadiationSource;
 import nc.capability.radiation.source.RadiationSource;
+import nc.network.tile.TileUpdatePacket;
 import nc.radiation.RadSources;
+import nc.tile.ITileGui;
 import nc.tile.dummy.IInterfaceable;
 import nc.tile.energyFluid.IBufferable;
 import nc.tile.internal.inventory.InventoryConnection;
@@ -23,6 +26,7 @@ import nc.util.ItemStackHelper;
 import nc.util.OreDictHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
@@ -47,9 +51,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 
-public class TileNuclearFurnace extends TileEntity implements ITickable, ITileInventory, IInterfaceable, IBufferable {
+public class TileNuclearFurnace extends TileEntity implements ITickable, ITileInventory, ITileGui, IInterfaceable, IBufferable {
 	
-	private NonNullList<ItemStack> furnaceItemStacks = NonNullList.<ItemStack>withSize(3, ItemStack.EMPTY);
+	private NonNullList<ItemStack> furnaceItemStacks = NonNullList.withSize(3, ItemStack.EMPTY);
 	
 	private final InventoryConnection outputConnection = new InventoryConnection(Lists.newArrayList(ItemSorption.NON, ItemSorption.IN, ItemSorption.OUT));
 	private final InventoryConnection inputConnection = new InventoryConnection(Lists.newArrayList(ItemSorption.IN, ItemSorption.NON, ItemSorption.NON));
@@ -134,10 +138,10 @@ public class TileNuclearFurnace extends TileEntity implements ITickable, ITileIn
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
-		furnaceBurnTime = nbt.getInteger("BurnTime");
-		cookTime = nbt.getInteger("CookTime");
-		totalCookTime = nbt.getInteger("CookTimeTotal");
-		currentItemBurnTime = getItemBurnTime(furnaceItemStacks.get(1));
+		furnaceBurnTime = nbt.getInteger("furnaceBurnTime");
+		cookTime = nbt.getInteger("cookTime");
+		totalCookTime = nbt.getInteger("totalCookTime");
+		currentItemBurnTime = nbt.getInteger("currentItemBurnTime");
 		readInventory(nbt);
 		readInventoryConnections(nbt);
 		readSlotSettings(nbt);
@@ -147,9 +151,10 @@ public class TileNuclearFurnace extends TileEntity implements ITickable, ITileIn
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		nbt.setInteger("BurnTime", (short) furnaceBurnTime);
-		nbt.setInteger("CookTime", (short) cookTime);
-		nbt.setInteger("CookTimeTotal", (short) totalCookTime);
+		nbt.setInteger("furnaceBurnTime", furnaceBurnTime);
+		nbt.setInteger("cookTime", cookTime);
+		nbt.setInteger("totalCookTime", totalCookTime);
+		nbt.setInteger("currentItemBurnTime", currentItemBurnTime);
 		writeInventory(nbt);
 		writeInventoryConnections(nbt);
 		writeSlotSettings(nbt);
@@ -173,7 +178,7 @@ public class TileNuclearFurnace extends TileEntity implements ITickable, ITileIn
 		
 		if (isBurning()) {
 			--furnaceBurnTime;
-			getRadiationSource().setRadiationLevel(RadSources.THORIUM);
+			getRadiationSource().setRadiationLevel(RadSources.LEU_235_FISSION);
 		} else {
 			getRadiationSource().setRadiationLevel(0D);
 		}
@@ -272,16 +277,9 @@ public class TileNuclearFurnace extends TileEntity implements ITickable, ITileIn
 	
 	public static int getItemBurnTime(ItemStack stack) {
 		if (stack.isEmpty()) return 0;
-		else if (OreDictHelper.isOreMember(stack, "blockThorium")) return 3200;
 		else if (OreDictHelper.isOreMember(stack, "blockUranium")) return 3200;
-		else if (OreDictHelper.isOreMember(stack, "ingotThorium")) return 320;
 		else if (OreDictHelper.isOreMember(stack, "ingotUranium")) return 320;
-		else if (OreDictHelper.isOreMember(stack, "dustThorium")) return 320;
 		else if (OreDictHelper.isOreMember(stack, "dustUranium")) return 320;
-		else if (OreDictHelper.isOreMember(stack, "ingotThoriumCarbide")) return 480;
-		else if (OreDictHelper.isOreMember(stack, "ingotThoriumOxide")) return 480;
-		else if (OreDictHelper.isOreMember(stack, "ingotThoriumNitride")) return 480;
-		else if (OreDictHelper.isOreMember(stack, "ingotThoriumZA")) return 480;
 		else return 0;
 	}
 	
@@ -356,8 +354,12 @@ public class TileNuclearFurnace extends TileEntity implements ITickable, ITileIn
 	
 	@Override
 	public ITextComponent getDisplayName() {
-		if (getBlockType() != null) return new TextComponentTranslation(getBlockType().getLocalizedName());
-		else return null;
+		return getBlockType() == null ? null : new TextComponentTranslation(getBlockType().getLocalizedName());
+	}
+	
+	@Override
+	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+		return oldState.getBlock() != newState.getBlock();
 	}
 	
 	@Override
@@ -461,4 +463,39 @@ public class TileNuclearFurnace extends TileEntity implements ITickable, ITileIn
 	public void setItemOutputSetting(int slot, ItemOutputSetting setting) {
 		itemOutputSettings.set(slot, setting);
 	}
+	
+	// ITileGui
+	
+	@Override
+	public int getGuiID() {
+		return 0;
+	}
+	
+	@Override
+	public Set<EntityPlayer> getPlayersToUpdate() {
+		return null;
+	}
+	
+	@Override
+	public TileUpdatePacket getGuiUpdatePacket() {
+		return null;
+	}
+	
+	@Override
+	public void onGuiPacket(TileUpdatePacket message) {}
+	
+	@Override
+	public void beginUpdatingPlayer(EntityPlayer playerToUpdate) {}
+	
+	@Override
+	public void stopUpdatingPlayer(EntityPlayer playerToRemove) {}
+	
+	@Override
+	public void sendUpdateToListeningPlayers() {}
+	
+	@Override
+	public void sendIndividualUpdate(EntityPlayer player) {}
+	
+	@Override
+	public void sendUpdateToAllPlayers() {}
 }

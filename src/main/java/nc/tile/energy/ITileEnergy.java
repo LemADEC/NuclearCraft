@@ -131,13 +131,13 @@ public interface ITileEnergy extends ITile {
 		}
 	}
 	
-	public default void spreadEnergy() {
+	/*public default void spreadEnergy() {
 		if (!NCConfig.passive_permeation) return;
 		for (EnumFacing side : EnumFacing.VALUES) {
 			if (getEnergyStorage().getEnergyStored() <= 0) return;
 			spreadEnergyToSide(side);
 		}
-	}
+	}*/
 	
 	public default void pushEnergyToSide(@Nonnull EnumFacing side) {
 		if (!getEnergyConnection(side).canExtract()) return;
@@ -202,8 +202,7 @@ public interface ITileEnergy extends ITile {
 	public default void readEnergy(NBTTagCompound nbt) {
 		getEnergyStorage().setEnergyStored(nbt.getInteger("energy"));
 		getEnergyStorage().setStorageCapacity(nbt.getInteger("capacity"));
-		if (nbt.hasKey("maxTransfer")) getEnergyStorage().setMaxTransfer(nbt.getInteger("maxTransfer"));
-		else getEnergyStorage().setMaxTransfer(Math.max(nbt.getInteger("maxReceive"), nbt.getInteger("maxExtract"))); // For old NBT
+		getEnergyStorage().setMaxTransfer(nbt.getInteger("maxTransfer"));
 	}
 	
 	public default NBTTagCompound writeEnergyConnections(NBTTagCompound nbt) {

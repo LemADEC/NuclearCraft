@@ -9,9 +9,9 @@ import nc.multiblock.cuboidal.PartPosition;
 import nc.multiblock.fission.FissionReactor;
 import nc.multiblock.fission.block.BlockFissionSource;
 import nc.recipe.NCRecipes;
+import nc.recipe.ProcessorRecipe;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -81,6 +81,11 @@ public abstract class TileFissionSource extends TileFissionPart {
 	}
 	
 	@Override
+	public int[] weakSidesToCheck(World world, BlockPos pos) {
+		return new int[] {2, 3, 4, 5};
+	}
+	
+	@Override
 	public void onAdded() {
 		world.neighborChanged(pos, getBlockType(), pos);
 		super.onAdded();
@@ -92,7 +97,7 @@ public abstract class TileFissionSource extends TileFissionPart {
 		super.onBlockNeighborChanged(state, world, pos, fromPos);
 		updateBlockState(getIsRedstonePowered());
 		if (!world.isRemote && wasRedstonePowered != getIsRedstonePowered()) {
-			getMultiblock().getLogic().onSourceUpdated(this);
+			getLogic().onSourceUpdated(this);
 		}
 	}
 	
@@ -105,16 +110,25 @@ public abstract class TileFissionSource extends TileFissionPart {
 	
 	public PrimingTargetInfo getPrimingTarget() {
 		if (getPartPosition().getFacing() == null) return null;
-		EnumFacing dir = getPartPosition().getFacing().getOpposite();
+		EnumFacing facing = getPartPosition().getFacing(), dir = facing.getOpposite();
 		for (int i = NCConfig.fission_min_size; i <= NCConfig.fission_max_size; i++) {
 			BlockPos offPos = pos.offset(dir, i);
-			if (blockRecipe(NCRecipes.fission_reflector, offPos) != null) return null;
-			TileEntity tile = world.getTileEntity(offPos);
-			if (tile instanceof IFissionFuelComponent) {
-				IFissionFuelComponent fuelComponent = (IFissionFuelComponent) tile;
-				double oldSourceEfficiency = fuelComponent.getSourceEfficiency();
-				fuelComponent.setSourceEfficiency(efficiency, true);
-				return new PrimingTargetInfo(fuelComponent, oldSourceEfficiency != fuelComponent.getSourceEfficiency());
+			ProcessorRecipe blockRecipe = blockRecipe(NCRecipes.fission_reflector, offPos);
+			if (blockRecipe != null && blockRecipe.getFissionReflectorReflectivity() >= 1D) {
+				return null;
+			}
+			IFissionComponent component = getMultiblock().getPartMap(IFissionComponent.class).get(offPos.toLong());
+			// First check if source is blocked by a flux sink
+			if (component instanceof IFissionFluxSink && ((IFissionFluxSink)component).isNullifyingSources(facing)) {
+				return null;
+			}
+			if (component instanceof IFissionFuelComponent) {
+				IFissionFuelComponent fuelComponent = (IFissionFuelComponent) component;
+				if (fuelComponent.isAcceptingFlux(facing)) {
+					double oldSourceEfficiency = fuelComponent.getSourceEfficiency();
+					fuelComponent.setSourceEfficiency(efficiency, true);
+					return new PrimingTargetInfo(fuelComponent, oldSourceEfficiency != fuelComponent.getSourceEfficiency());
+				}
 			}
 		}
 		return null;

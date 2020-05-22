@@ -5,9 +5,11 @@ import nc.init.NCArmor;
 import nc.init.NCBlocks;
 import nc.init.NCItems;
 import nc.init.NCTools;
+import nc.multiblock.qComputer.tile.TileQuantumComputerQubit;
 import nc.multiblock.turbine.tile.TileTurbineController;
 import nc.render.BlockHighlightHandler;
 import nc.render.entity.RenderFeralGhoul;
+import nc.render.tile.RenderQuantumComputerQubit;
 import nc.render.tile.RenderTurbineRotor;
 import nc.util.NCUtil;
 import net.minecraft.client.renderer.entity.Render;
@@ -27,7 +29,7 @@ public class RenderHandler {
 		NCArmor.registerRenders();
 		
 		ClientRegistry.bindTileEntitySpecialRenderer(TileTurbineController.class, new RenderTurbineRotor());
-		//ClientRegistry.bindTileEntitySpecialRenderer(TileSpin.class, new RenderSpin());
+		ClientRegistry.bindTileEntitySpecialRenderer(TileQuantumComputerQubit.class, new RenderQuantumComputerQubit());
 		
 		registerEntityRender(EntityFeralGhoul.class, RenderFeralGhoul.class);
 		
@@ -42,7 +44,7 @@ public class RenderHandler {
 				try {
 					render = NCUtil.newInstance(renderClass, manager);
 				} catch (Exception e) {
-					NCUtil.getLogger().catching(e);
+					e.printStackTrace();
 				}
 				return render;
 			}

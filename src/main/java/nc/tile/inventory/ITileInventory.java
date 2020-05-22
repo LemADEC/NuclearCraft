@@ -20,7 +20,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
@@ -100,10 +99,6 @@ public interface ITileInventory extends ITile {
 		getInventoryStacks().clear();
 	}
 	
-	public default boolean isUsableByPlayer(EntityPlayer player) {
-		return getTileWorld().getTileEntity(getTilePos()) != this ? false : player.getDistanceSq(getTilePos().getX() + 0.5D, getTilePos().getY() + 0.5D, getTilePos().getZ() + 0.5D) <= 64D;
-	}
-	
 	public default void openInventory(EntityPlayer player) {}
 	
 	public default void closeInventory(EntityPlayer player) {}
@@ -119,8 +114,6 @@ public interface ITileInventory extends ITile {
 	}
 	
 	public String getName();
-	
-	public ITextComponent getDisplayName();
 	
 	// ISidedInventory
 	

@@ -3,6 +3,7 @@ package nc.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -65,7 +66,7 @@ public class OreDictHelper {
 	}
 	
 	public static String getOreNameFromStacks(List<ItemStack> stackList) {
-		List<String> oreNameList = new ArrayList<String>();
+		List<String> oreNameList = new ArrayList<>();
 		if (stackList == null || stackList.isEmpty()) return "Unknown";
 		oreNameList.addAll(getOreNames(stackList.get(0)));
 		
@@ -78,7 +79,7 @@ public class OreDictHelper {
 	}
 	
 	public static boolean getBlockMatchesOre(World world, BlockPos pos, String... names) {
-		List<ItemStack> stackList = new ArrayList<ItemStack>();
+		List<ItemStack> stackList = new ArrayList<>();
 		for (int i = 0; i < names.length; i++) {
 			List<ItemStack> stacks = OreDictionary.getOres(names[i], false);
 			stackList.addAll(stacks);
@@ -91,7 +92,7 @@ public class OreDictHelper {
 	public static List<ItemStack> getPrioritisedStackList(String ore) {
 		List<ItemStack> defaultStackList = new ArrayList<ItemStack>(OreDictionary.getOres(ore, false));
 		if (!NCConfig.ore_dict_priority_bool || NCConfig.ore_dict_priority.length < 1) return defaultStackList;
-		List<ItemStack> prioritisedStackList = new ArrayList<ItemStack>();
+		List<ItemStack> prioritisedStackList = new ArrayList<>();
 		for (int i = 0; i < NCConfig.ore_dict_priority.length; i++) {
 			for (ItemStack stack : defaultStackList) {
 				if (RegistryHelper.getModID(stack).equals(NCConfig.ore_dict_priority[i]) && !prioritisedStackList.contains(stack)) {
@@ -129,6 +130,28 @@ public class OreDictHelper {
 	public static ItemStack getPrioritisedCraftingStack(Block backup, String ore) {
 		return getPrioritisedCraftingStack(backup == null ? ItemStack.EMPTY : new ItemStack(backup), ore);
 	}
+	
+	// Wildcard Helper
+	
+	public static void addWildcard(Set<String> set, String ore) {
+		ore = StringHelper.regex(ore);
+		for (String o : OreDictionary.getOreNames()) {
+			if (o.matches(ore)) {
+				set.add(o);
+			}
+		}
+	}
+	
+	public static <T> void putWildcard(Map<String, T> map, String ore, T value) {
+		ore = StringHelper.regex(ore);
+		for (String o : OreDictionary.getOreNames()) {
+			if (o.matches(ore)) {
+				map.put(o, value);
+			}
+		}
+	}
+	
+	// Ore Dictionary Entry Cache
 	
 	private static final Int2ObjectMap<Set<String>> ORE_DICT_CACHE = new Int2ObjectOpenHashMap<>();
 	

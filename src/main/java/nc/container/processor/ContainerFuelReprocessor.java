@@ -1,8 +1,8 @@
 package nc.container.processor;
 
-import nc.container.SlotFurnace;
-import nc.container.SlotProcessorInput;
-import nc.container.SlotSpecificInput;
+import nc.container.slot.SlotFurnace;
+import nc.container.slot.SlotProcessorInput;
+import nc.container.slot.SlotSpecificInput;
 import nc.recipe.NCRecipes;
 import nc.tile.processor.TileItemProcessor;
 import net.minecraft.entity.player.EntityPlayer;
@@ -13,15 +13,17 @@ public class ContainerFuelReprocessor extends ContainerItemProcessor {
 	public ContainerFuelReprocessor(EntityPlayer player, TileItemProcessor tileEntity) {
 		super(player, tileEntity, NCRecipes.fuel_reprocessor);
 		
-		addSlotToContainer(new SlotProcessorInput(tileEntity, recipeHandler, 0, 50, 41));
+		addSlotToContainer(new SlotProcessorInput(tileEntity, recipeHandler, 0, 40, 41));
 		
-		addSlotToContainer(new SlotFurnace(player, tileEntity, 1, 106, 31));
-		addSlotToContainer(new SlotFurnace(player, tileEntity, 2, 126, 31));
-		addSlotToContainer(new SlotFurnace(player, tileEntity, 3, 106, 51));
-		addSlotToContainer(new SlotFurnace(player, tileEntity, 4, 126, 51));
+		addSlotToContainer(new SlotFurnace(player, tileEntity, 1, 96, 31));
+		addSlotToContainer(new SlotFurnace(player, tileEntity, 2, 116, 31));
+		addSlotToContainer(new SlotFurnace(player, tileEntity, 3, 136, 31));
+		addSlotToContainer(new SlotFurnace(player, tileEntity, 4, 96, 51));
+		addSlotToContainer(new SlotFurnace(player, tileEntity, 5, 116, 51));
+		addSlotToContainer(new SlotFurnace(player, tileEntity, 6, 136, 51));
 		
-		addSlotToContainer(new SlotSpecificInput(tileEntity, 5, 132, 76, speedUpgrade));
-		addSlotToContainer(new SlotSpecificInput(tileEntity, 6, 152, 76, energyUpgrade));
+		addSlotToContainer(new SlotSpecificInput(tileEntity, 7, 132, 76, SPEED_UPGRADE));
+		addSlotToContainer(new SlotSpecificInput(tileEntity, 8, 152, 76, ENERGY_UPGRADE));
 		
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 9; j++) {

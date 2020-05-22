@@ -1,6 +1,9 @@
 package nc.recipe.processor;
 
-import static nc.util.FissionHelper.ISOTOPE_ORE_DICT;
+import static nc.util.FissionHelper.FISSION_ORE_DICT;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.common.collect.Lists;
 
@@ -23,19 +26,41 @@ public class InfuserRecipes extends ProcessorRecipeHandler {
 	@Override
 	public void addRecipes() {
 		addOxidizingRecipe("ingotThorium", FluidStackHelper.BUCKET_VOLUME);
-		addOxidizingRecipe("ingotManganese", FluidStackHelper.BUCKET_VOLUME);
-		addRecipe("ingotManganeseOxide", fluidStack("oxygen", FluidStackHelper.BUCKET_VOLUME), "ingotManganeseDioxide", 1D, 1D);
 		addOxidizingRecipe("dustThorium", FluidStackHelper.BUCKET_VOLUME);
+		addOxidizingRecipe("ingotManganese", FluidStackHelper.BUCKET_VOLUME);
 		addOxidizingRecipe("dustManganese", FluidStackHelper.BUCKET_VOLUME);
+		addRecipe("ingotManganeseOxide", fluidStack("oxygen", FluidStackHelper.BUCKET_VOLUME), "ingotManganeseDioxide", 1D, 1D);
 		addRecipe("dustManganeseOxide", fluidStack("oxygen", FluidStackHelper.BUCKET_VOLUME), "dustManganeseDioxide", 1D, 1D);
 		
 		addRecipe(Lists.newArrayList(Blocks.ICE, Blocks.PACKED_ICE), fluidStack("liquid_helium", 50), NCBlocks.supercold_ice, 0.2D, 0.5D);
 		
+		addRecipe(new ItemStack(NCBlocks.fission_heater_port, 1, 0), fluidStack("liquid_nitrogen", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.fission_heater_port2, 1, 12), 1D, 1D);
+		addRecipe(new ItemStack(NCBlocks.fission_heater_port, 1, 0), fluidStack("liquid_helium", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.fission_heater_port2, 1, 13), 1D, 1D);
+		if (!OreDictHelper.oreExists("ingotEnderium")) {
+			addRecipe(new ItemStack(NCBlocks.fission_heater_port, 1, 0), fluidStack("enderium", FluidStackHelper.INGOT_VOLUME*4), new ItemStack(NCBlocks.fission_heater_port2, 1, 14), 1D, 1D);
+		}
+		if (!OreDictHelper.oreExists("dustCryotheum")) {
+			addRecipe(new ItemStack(NCBlocks.fission_heater_port, 1, 0), fluidStack("cryotheum", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.fission_heater_port2, 1, 15), 1D, 1D);
+		}
+		
 		addRecipe("emptyHeatSink", fluidStack("water", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.solid_fission_sink, 1, 0), 1D, 1D);
 		addRecipe("emptyHeatSink", fluidStack("liquid_nitrogen", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.solid_fission_sink2, 1, 12), 1D, 1D);
 		addRecipe("emptyHeatSink", fluidStack("liquid_helium", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.solid_fission_sink2, 1, 13), 1D, 1D);
-		addRecipe("emptyHeatSink", fluidStack("enderium", FluidStackHelper.INGOT_VOLUME*4), new ItemStack(NCBlocks.solid_fission_sink2, 1, 14), 1D, 1D);
-		addRecipe("emptyHeatSink", fluidStack("cryotheum", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.solid_fission_sink2, 1, 15), 1D, 1D);
+		if (!OreDictHelper.oreExists("ingotEnderium")) {
+			addRecipe("emptyHeatSink", fluidStack("enderium", FluidStackHelper.INGOT_VOLUME*4), new ItemStack(NCBlocks.solid_fission_sink2, 1, 14), 1D, 1D);
+		}
+		if (!OreDictHelper.oreExists("dustCryotheum")) {
+			addRecipe("emptyHeatSink", fluidStack("cryotheum", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.solid_fission_sink2, 1, 15), 1D, 1D);
+		}
+		
+		addRecipe(new ItemStack(NCBlocks.salt_fission_heater, 1, 0), fluidStack("liquid_nitrogen", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.salt_fission_heater2, 1, 12), 1D, 1D);
+		addRecipe(new ItemStack(NCBlocks.salt_fission_heater, 1, 0), fluidStack("liquid_helium", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.salt_fission_heater2, 1, 13), 1D, 1D);
+		if (!OreDictHelper.oreExists("ingotEnderium")) {
+			addRecipe(new ItemStack(NCBlocks.salt_fission_heater, 1, 0), fluidStack("enderium", FluidStackHelper.INGOT_VOLUME*4), new ItemStack(NCBlocks.salt_fission_heater2, 1, 14), 1D, 1D);
+		}
+		if (!OreDictHelper.oreExists("dustCryotheum")) {
+			addRecipe(new ItemStack(NCBlocks.salt_fission_heater, 1, 0), fluidStack("cryotheum", FluidStackHelper.BUCKET_VOLUME), new ItemStack(NCBlocks.salt_fission_heater2, 1, 15), 1D, 1D);
+		}
 		
 		addRecipe(oreStack("bioplastic", 2), fluidStack("radaway", FluidStackHelper.BUCKET_VOLUME/4), NCItems.radaway, 1D, 0.5D);
 		addRecipe(oreStack("bioplastic", 2), fluidStack("radaway_slow", FluidStackHelper.BUCKET_VOLUME/4), NCItems.radaway_slow, 1D, 0.5D);
@@ -70,7 +95,7 @@ public class InfuserRecipes extends ProcessorRecipeHandler {
 		addRecipe(Blocks.HARDENED_CLAY, fluidStack("water", FluidStackHelper.BUCKET_VOLUME*4), Blocks.CLAY, 4D, 1D);
 		
 		// Fission Materials
-		addIsotopeInfusionRecipes();
+		addFissionInfusionRecipes();
 	}
 	
 	public void addOxidizingRecipe(String name, int oxygenAmount) {
@@ -82,10 +107,19 @@ public class InfuserRecipes extends ProcessorRecipeHandler {
 		addRecipe("dust" + in, fluidStack(fluid, amount), "dust" + out, time, power);
 	}
 	
-	public void addIsotopeInfusionRecipes() {
-		for (int i = 0; i < ISOTOPE_ORE_DICT.length; i++) {
-			addRecipe("ingot" + ISOTOPE_ORE_DICT[i], fluidStack("oxygen", FluidStackHelper.BUCKET_VOLUME/2), "ingot" + ISOTOPE_ORE_DICT[i] + "Oxide", 1D, 1D);
-			addRecipe("ingot" + ISOTOPE_ORE_DICT[i], fluidStack("nitrogen", FluidStackHelper.BUCKET_VOLUME/2), "ingot" + ISOTOPE_ORE_DICT[i] + "Nitride", 1D, 1D);
+	public void addFissionInfusionRecipes() {
+		for (int i = 0; i < FISSION_ORE_DICT.length; i++) {
+			addRecipe("ingot" + FISSION_ORE_DICT[i], fluidStack("oxygen", FluidStackHelper.BUCKET_VOLUME), "ingot" + FISSION_ORE_DICT[i] + "Oxide", 1D, 1D);
+			addRecipe("ingot" + FISSION_ORE_DICT[i], fluidStack("nitrogen", FluidStackHelper.BUCKET_VOLUME), "ingot" + FISSION_ORE_DICT[i] + "Nitride", 1D, 1D);
 		}
+	}
+	
+	@Override
+	public List fixExtras(List extras) {
+		List fixed = new ArrayList(3);
+		fixed.add(extras.size() > 0 && extras.get(0) instanceof Double ? (double) extras.get(0) : 1D);
+		fixed.add(extras.size() > 1 && extras.get(1) instanceof Double ? (double) extras.get(1) : 1D);
+		fixed.add(extras.size() > 2 && extras.get(2) instanceof Double ? (double) extras.get(2) : 0D);
+		return fixed;
 	}
 }

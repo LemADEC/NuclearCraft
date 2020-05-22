@@ -2,7 +2,6 @@ package nc.network.gui;
 
 import io.netty.buffer.ByteBuf;
 import nc.tile.fluid.ITileFluid;
-import nc.util.NCUtil;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -36,8 +35,8 @@ public class ToggleVoidUnusableFluidInputPacket implements IMessage {
 			pos = new BlockPos(buf.readInt(), buf.readInt(), buf.readInt());
 			voidUnusableFluidInput = buf.readBoolean();
 			tankNumber = buf.readInt();
-		} catch (IndexOutOfBoundsException ioe) {
-			NCUtil.getLogger().catching(ioe);
+		} catch (IndexOutOfBoundsException e) {
+			e.printStackTrace();
 			return;
 		}
 		messageValid = true;
@@ -67,7 +66,7 @@ public class ToggleVoidUnusableFluidInputPacket implements IMessage {
 			if (tile instanceof ITileFluid) {
 				ITileFluid machine = (ITileFluid) tile;
 				machine.setVoidUnusableFluidInput(message.tankNumber, message.voidUnusableFluidInput);
-				ctx.getServerHandler().player.getServerWorld().getTileEntity(message.pos).markDirty();
+				tile.markDirty();
 			}
 		}
 	}

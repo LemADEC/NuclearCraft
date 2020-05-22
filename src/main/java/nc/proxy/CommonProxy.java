@@ -1,5 +1,7 @@
 package nc.proxy;
 
+import java.util.Locale;
+
 import nc.Global;
 import nc.ModCheck;
 import nc.capability.radiation.RadiationCapabilityHandler;
@@ -8,6 +10,7 @@ import nc.config.NCConfig;
 import nc.handler.CapabilityHandler;
 import nc.handler.DropHandler;
 import nc.handler.DungeonLootHandler;
+import nc.handler.EntityHandler;
 import nc.handler.ItemUseHandler;
 import nc.handler.OreDictHandler;
 import nc.handler.PlayerRespawnHandler;
@@ -32,6 +35,7 @@ import nc.multiblock.MultiblockRegistry;
 import nc.network.PacketHandler;
 import nc.radiation.RadArmor;
 import nc.radiation.RadBiomes;
+import nc.radiation.RadEntities;
 import nc.radiation.RadPotionEffects;
 import nc.radiation.RadSources;
 import nc.radiation.RadStructures;
@@ -90,6 +94,7 @@ public class CommonProxy {
 		
 		NCTiles.register();
 		
+		MultiblockHandler.init();
 		MultiblockLogic.init();
 		
 		OreDictHandler.registerOres();
@@ -127,6 +132,7 @@ public class CommonProxy {
 		//GameRegistry.registerWorldGenerator(new WastelandPortalGenerator(), 10);
 		
 		NCEntities.register();
+		MinecraftForge.EVENT_BUS.register(new EntityHandler());
 		
 		if (ModCheck.tinkersLoaded()) {
 			TConstructExtras.init();
@@ -145,6 +151,7 @@ public class CommonProxy {
 		RadPotionEffects.init();
 		RadSources.postInit();
 		RadStructures.init();
+		RadEntities.init();
 		//RadBlockEffects.init();
 		
 		MinecraftForge.EVENT_BUS.register(new RadiationCapabilityHandler());
@@ -195,7 +202,7 @@ public class CommonProxy {
 	// Fluid Colours
 	
 	public void registerFluidBlockRendering(Block block, String name) {
-		
+		name = name.toLowerCase(Locale.ROOT);
 	}
 	
 	public void initFluidColors() {

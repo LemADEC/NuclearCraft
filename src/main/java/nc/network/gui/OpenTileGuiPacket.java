@@ -2,8 +2,7 @@ package nc.network.gui;
 
 import io.netty.buffer.ByteBuf;
 import nc.NuclearCraft;
-import nc.tile.IGui;
-import nc.util.NCUtil;
+import nc.tile.ITileGui;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -24,7 +23,7 @@ public class OpenTileGuiPacket implements IMessage {
 		messageValid = false;
 	}
 	
-	public OpenTileGuiPacket(IGui machine) {
+	public OpenTileGuiPacket(ITileGui machine) {
 		pos = machine.getTilePos();
 		messageValid = true;
 	}
@@ -33,8 +32,8 @@ public class OpenTileGuiPacket implements IMessage {
 	public void fromBytes(ByteBuf buf) {
 		try {
 			pos = new BlockPos(buf.readInt(), buf.readInt(), buf.readInt());
-		} catch (IndexOutOfBoundsException ioe) {
-			NCUtil.getLogger().catching(ioe);
+		} catch (IndexOutOfBoundsException e) {
+			e.printStackTrace();
 			return;
 		}
 		messageValid = true;
@@ -60,9 +59,9 @@ public class OpenTileGuiPacket implements IMessage {
 		void processMessage(OpenTileGuiPacket message, MessageContext ctx) {
 			EntityPlayerMP player = ctx.getServerHandler().player;
 			TileEntity tile = player.getServerWorld().getTileEntity(message.pos);
-			if (tile instanceof IGui) {
-				FMLNetworkHandler.openGui(player, NuclearCraft.instance, ((IGui) tile).getGuiID(), player.getServerWorld(), message.pos.getX(), message.pos.getY(), message.pos.getZ());
-				((IGui) tile).beginUpdatingPlayer(player);
+			if (tile instanceof ITileGui) {
+				FMLNetworkHandler.openGui(player, NuclearCraft.instance, ((ITileGui) tile).getGuiID(), player.getServerWorld(), message.pos.getX(), message.pos.getY(), message.pos.getZ());
+				((ITileGui) tile).beginUpdatingPlayer(player);
 			}
 		}
 	}

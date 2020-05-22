@@ -1,8 +1,8 @@
 package nc.container.processor;
 
-import nc.container.SlotFurnace;
-import nc.container.SlotProcessorInput;
-import nc.container.SlotSpecificInput;
+import nc.container.slot.SlotFurnace;
+import nc.container.slot.SlotProcessorInput;
+import nc.container.slot.SlotSpecificInput;
 import nc.recipe.NCRecipes;
 import nc.tile.processor.TileItemProcessor;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,8 +19,8 @@ public class ContainerRockCrusher extends ContainerItemProcessor {
 		addSlotToContainer(new SlotFurnace(player, tileEntity, 2, 114, 35));
 		addSlotToContainer(new SlotFurnace(player, tileEntity, 3, 134, 35));
 		
-		addSlotToContainer(new SlotSpecificInput(tileEntity, 4, 132, 64, speedUpgrade));
-		addSlotToContainer(new SlotSpecificInput(tileEntity, 5, 152, 64, energyUpgrade));
+		addSlotToContainer(new SlotSpecificInput(tileEntity, 4, 132, 64, SPEED_UPGRADE));
+		addSlotToContainer(new SlotSpecificInput(tileEntity, 5, 152, 64, ENERGY_UPGRADE));
 		
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 9; j++) {

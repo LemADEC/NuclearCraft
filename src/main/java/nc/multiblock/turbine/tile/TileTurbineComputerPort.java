@@ -49,7 +49,7 @@ public class TileTurbineComputerPort extends TileTurbinePart implements SimpleCo
 	
 	@Callback
 	@Optional.Method(modid = "opencomputers")
-	public Object[] isHeatExchangerOn(Context context, Arguments args) {
+	public Object[] isTurbineOn(Context context, Arguments args) {
 		return new Object[] {isMultiblockAssembled() ? getMultiblock().isTurbineOn : false};
 	}
 	
@@ -128,7 +128,7 @@ public class TileTurbineComputerPort extends TileTurbinePart implements SimpleCo
 	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getIdealExpansionLevels(Context context, Arguments args) {
-		return isMultiblockAssembled() ? getMultiblock().getLogic().getIdealExpansionLevels().toArray() : new Object[] {};
+		return isMultiblockAssembled() ? getLogic().getIdealExpansionLevels().toArray() : new Object[] {};
 	}
 	
 	@Callback
@@ -151,13 +151,13 @@ public class TileTurbineComputerPort extends TileTurbinePart implements SimpleCo
 	
 	@Callback
 	@Optional.Method(modid = "opencomputers")
-	public Object[] getDynamoCoilStats(Context context, Arguments args) {
+	public Object[] getDynamoPartStats(Context context, Arguments args) {
 		if (isMultiblockAssembled()) {
-			List<Object[]> stats = new ArrayList<Object[]>();
+			List<Object[]> stats = new ArrayList<>();
 			for (TileTurbineDynamoCoil dynamoCoil : getMultiblock().getPartMap(TileTurbineDynamoCoil.class).values()) {
 				stats.add(new Object[] {
 						new Object[] {dynamoCoil.getPos().getX(), dynamoCoil.getPos().getY(), dynamoCoil.getPos().getZ()},
-						dynamoCoil.coilName,
+						dynamoCoil.partName,
 						dynamoCoil.isInValidPosition
 						});
 			}
@@ -171,7 +171,7 @@ public class TileTurbineComputerPort extends TileTurbinePart implements SimpleCo
 	public Object[] activate(Context context, Arguments args) {
 		if (isMultiblockAssembled()) {
 			getMultiblock().computerActivated = true;
-			getMultiblock().getLogic().setIsTurbineOn();
+			getLogic().setIsTurbineOn();
 		}
 		return new Object[] {};
 	}
@@ -181,7 +181,7 @@ public class TileTurbineComputerPort extends TileTurbinePart implements SimpleCo
 	public Object[] deactivate(Context context, Arguments args) {
 		if (isMultiblockAssembled()) {
 			getMultiblock().computerActivated = false;
-			getMultiblock().getLogic().setIsTurbineOn();
+			getLogic().setIsTurbineOn();
 		}
 		return new Object[] {};
 	}

@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 
-import nc.config.NCConfig;
 import nc.tile.ITile;
 import nc.tile.internal.fluid.FluidConnection;
 import nc.tile.internal.fluid.FluidTileWrapper;
@@ -175,14 +174,14 @@ public interface ITileFluid extends ITile {
 		}
 	}
 	
-	public default void spreadFluid() {
+	/*public default void spreadFluid() {
 		if (!NCConfig.passive_permeation || getTanks().isEmpty()) {
 			return;
 		}
 		for (EnumFacing side : EnumFacing.VALUES) {
 			spreadFluidToSide(side);
 		}
-	}
+	}*/
 	
 	public default void pushFluidToSide(@Nonnull EnumFacing side) {
 		if (!getFluidConnection(side).canConnect()) {
@@ -227,14 +226,14 @@ public interface ITileFluid extends ITile {
 	
 	public default NBTTagCompound writeTanks(NBTTagCompound nbt) {
 		for (int i = 0; i < getTanks().size(); i++) {
-			getTanks().get(i).writeToNBT(nbt, i);
+			getTanks().get(i).writeToNBT(nbt, "tanks" + i);
 		}
 		return nbt;
 	}
 	
 	public default void readTanks(NBTTagCompound nbt) {
 		for (int i = 0; i < getTanks().size(); i++) {
-			getTanks().get(i).readFromNBT(nbt, i);
+			getTanks().get(i).readFromNBT(nbt, "tanks" + i);
 		}
 	}
 	

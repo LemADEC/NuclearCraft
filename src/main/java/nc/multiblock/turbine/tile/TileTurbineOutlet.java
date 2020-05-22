@@ -35,7 +35,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 
 public class TileTurbineOutlet extends TileTurbinePart implements ITileFluid {
 	
-	private final @Nonnull List<Tank> backupTanks = Lists.newArrayList(new Tank(1, new ArrayList<String>()));
+	private final @Nonnull List<Tank> backupTanks = Lists.newArrayList(new Tank(1, new ArrayList<>()));
 	
 	private @Nonnull FluidConnection[] fluidConnections = ITileFluid.fluidConnectionAll(TankSorption.OUT);
 	
@@ -121,7 +121,7 @@ public class TileTurbineOutlet extends TileTurbinePart implements ITileFluid {
 		TileEntity tile = getTileWorld().getTileEntity(getTilePos().offset(side));
 		if (tile == null || tile instanceof TileTurbineOutlet) return;
 		
-		if (tile instanceof ITilePassive) if (!((ITilePassive)tile).canPushFluidsTo()) return;
+		if (tile instanceof ITilePassive && !((ITilePassive)tile).canPushFluidsTo()) return;
 		
 		IFluidHandler adjStorage = tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, side.getOpposite());
 		if (adjStorage == null || getTanks().get(0).getFluid() == null) return;

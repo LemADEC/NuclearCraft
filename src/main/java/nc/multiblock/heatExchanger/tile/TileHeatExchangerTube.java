@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import nc.ModCheck;
 import nc.config.NCConfig;
 import nc.multiblock.cuboidal.CuboidalPartPositionType;
@@ -17,7 +18,6 @@ import nc.multiblock.heatExchanger.HeatExchangerTubeType;
 import nc.recipe.AbstractRecipeHandler;
 import nc.recipe.NCRecipes;
 import nc.recipe.ProcessorRecipe;
-import nc.recipe.ProcessorRecipeHandler;
 import nc.recipe.RecipeInfo;
 import nc.recipe.ingredient.IFluidIngredient;
 import nc.tile.fluid.ITileFluid;
@@ -30,7 +30,6 @@ import nc.tile.internal.fluid.TankSorption;
 import nc.tile.passive.ITilePassive;
 import nc.tile.processor.IFluidProcessor;
 import nc.util.GasHelper;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -39,36 +38,34 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
-public class TileHeatExchangerTube extends TileHeatExchangerPart implements IFluidProcessor, ITileFluid {
+public class TileHeatExchangerTube extends TileHeatExchangerPart implements IFluidProcessor {
 	
-	private final @Nonnull List<Tank> tanks = Lists.newArrayList(new Tank(32000, NCRecipes.heat_exchanger_valid_fluids.get(0)), new Tank(64000, new ArrayList<String>()));
+	protected final @Nonnull List<Tank> tanks = Lists.newArrayList(new Tank(32000, NCRecipes.heat_exchanger_valid_fluids.get(0)), new Tank(64000, new ArrayList<>()));
 	
-	private @Nonnull FluidConnection[] fluidConnections = ITileFluid.fluidConnectionAll(Lists.newArrayList(TankSorption.NON, TankSorption.NON));
+	protected @Nonnull FluidConnection[] fluidConnections = ITileFluid.fluidConnectionAll(Lists.newArrayList(TankSorption.NON, TankSorption.NON));
 	
-	private @Nonnull FluidTileWrapper[] fluidSides;
+	protected @Nonnull FluidTileWrapper[] fluidSides;
 	
-	private @Nonnull GasTileWrapper gasWrapper;
+	protected @Nonnull GasTileWrapper gasWrapper;
 	
-	private @Nonnull HeatExchangerTubeSetting[] tubeSettings = new HeatExchangerTubeSetting[] {HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED};
+	protected @Nonnull HeatExchangerTubeSetting[] tubeSettings = new HeatExchangerTubeSetting[] {HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED, HeatExchangerTubeSetting.DISABLED};
 	
-	public final int fluidInputSize = 1, fluidOutputSize = 1;
+	protected final int fluidInputSize = 1, fluidOutputSize = 1;
 	
-	public final int defaultProcessTime = 16000;
-	public double baseProcessTime = defaultProcessTime;
+	public double baseProcessTime = 16000D;
 	
 	public double time;
 	public boolean isProcessing, canProcessInputs;
 	public double speedMultiplier = 0;
 	
-	public int inputTemperature = 0, outputTemperature = 0;
+	public int inputTemperature = 300, outputTemperature = 300;
 	public EnumFacing flowDir = null;
 	
-	public static final ProcessorRecipeHandler RECIPE_HANDLER = NCRecipes.heat_exchanger;
 	protected RecipeInfo<ProcessorRecipe> recipeInfo;
 	
 	public final double conductivity;
 	
-	protected int tubeCount;
+	//protected int tubeCount;
 	
 	public static class Copper extends TileHeatExchangerTube {
 		
@@ -190,37 +187,37 @@ public class TileHeatExchangerTube extends TileHeatExchangerPart implements IFlu
 			boolean wasProcessing = isProcessing;
 			isProcessing = isProcessing();
 			boolean shouldUpdate = false;
-			tickTube();
+			//tickTube();
 			if (isProcessing) process();
 			if (wasProcessing != isProcessing) {
 				shouldUpdate = true;
 			}
-			if (tubeCount == 0) {
+			/*if (tubeCount == 0) {
 				pushFluid();
 				refreshRecipe();
 				refreshActivity();
-			}
+			}*/
 			if (shouldUpdate) markDirty();
 		}
 	}
 	
-	public void tickTube() {
+	/*public void tickTube() {
 		tubeCount++; tubeCount %= NCConfig.machine_update_rate / 4;
-	}
+	}*/
 	
 	@Override
 	public void refreshRecipe() {
-		recipeInfo = RECIPE_HANDLER.getRecipeInfoFromInputs(new ArrayList<ItemStack>(), getFluidInputs());
+		recipeInfo = NCRecipes.heat_exchanger.getRecipeInfoFromInputs(new ArrayList<>(), getFluidInputs());
 	}
 	
 	@Override
 	public void refreshActivity() {
-		canProcessInputs = canProcessInputs(false);
+		canProcessInputs = canProcessInputs();
 	}
 	
 	@Override
 	public void refreshActivityOnProduction() {
-		canProcessInputs = canProcessInputs(true);
+		canProcessInputs = canProcessInputs();
 	}
 	
 	// Processor Stats
@@ -247,12 +244,12 @@ public class TileHeatExchangerTube extends TileHeatExchangerPart implements IFlu
 	
 	public boolean setRecipeStats() {
 		if (recipeInfo == null) {
-			baseProcessTime = defaultProcessTime;
-			inputTemperature = 0;
-			outputTemperature = 0;
+			baseProcessTime = 16000D;
+			inputTemperature = 300;
+			outputTemperature = 300;
 			return false;
 		}
-		baseProcessTime = recipeInfo.getRecipe().getHeatExchangerProcessTime(defaultProcessTime);
+		baseProcessTime = recipeInfo.getRecipe().getHeatExchangerProcessTime();
 		inputTemperature = recipeInfo.getRecipe().getHeatExchangerInputTemperature();
 		outputTemperature = recipeInfo.getRecipe().getHeatExchangerOutputTemperature();
 		return true;
@@ -268,10 +265,12 @@ public class TileHeatExchangerTube extends TileHeatExchangerPart implements IFlu
 		return canProcessInputs && isMultiblockAssembled();
 	}
 	
-	public boolean canProcessInputs(boolean justProduced) {
-		if (!setRecipeStats()) return false;
-		else if (!justProduced && time >= baseProcessTime) return true;
-		return canProduceProducts();
+	public boolean canProcessInputs() {
+		boolean validRecipe = setRecipeStats(), canProcess = validRecipe && canProduceProducts();
+		if (!canProcess) {
+			time = MathHelper.clamp(time, 0D, baseProcessTime - 1D);
+		}
+		return canProcess;
 	}
 	
 	public boolean canProduceProducts() {
@@ -292,22 +291,21 @@ public class TileHeatExchangerTube extends TileHeatExchangerPart implements IFlu
 	
 	public void process() {
 		time = Math.max(0, time + getSpeedMultiplier());
-		if (time >= baseProcessTime) finishProcess();
+		while (time >= baseProcessTime) finishProcess();
 	}
 	
 	public void finishProcess() {
 		double oldProcessTime = baseProcessTime;
 		produceProducts();
 		refreshRecipe();
-		if (!setRecipeStats()) time = 0;
-		else time = MathHelper.clamp(time - oldProcessTime, 0D, baseProcessTime);
+		time = Math.max(0D, time - oldProcessTime);
 		refreshActivityOnProduction();
 		if (!canProcessInputs) time = 0;
 	}
 	
 	public void produceProducts() {
 		if (recipeInfo == null) return;
-		List<Integer> fluidInputOrder = recipeInfo.getFluidInputOrder();
+		IntList fluidInputOrder = recipeInfo.getFluidInputOrder();
 		if (fluidInputOrder == AbstractRecipeHandler.INVALID) return;
 		
 		for (int i = 0; i < fluidInputSize; i++) {
@@ -329,18 +327,28 @@ public class TileHeatExchangerTube extends TileHeatExchangerPart implements IFlu
 	// IProcessor
 	
 	@Override
+	public int getFluidInputSize() {
+		return fluidInputSize;
+	}
+	
+	@Override
+	public int getFluidOutputputSize() {
+		return fluidOutputSize;
+	}
+	
+	@Override
 	public List<Tank> getFluidInputs() {
 		return tanks.subList(0, fluidInputSize);
 	}
 	
 	@Override
 	public List<IFluidIngredient> getFluidIngredients() {
-		return recipeInfo.getRecipe().fluidIngredients();
+		return recipeInfo.getRecipe().getFluidIngredients();
 	}
 	
 	@Override
 	public List<IFluidIngredient> getFluidProducts() {
-		return recipeInfo.getRecipe().fluidProducts();
+		return recipeInfo.getRecipe().getFluidProducts();
 	}
 	
 	// Fluids

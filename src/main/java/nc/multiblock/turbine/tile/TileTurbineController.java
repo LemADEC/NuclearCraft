@@ -4,7 +4,6 @@ import static nc.block.property.BlockProperties.FACING_ALL;
 
 import nc.multiblock.cuboidal.CuboidalPartPositionType;
 import nc.multiblock.turbine.Turbine;
-import nc.multiblock.turbine.TurbineLogic;
 import nc.multiblock.turbine.block.BlockTurbineController;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -23,13 +22,8 @@ public class TileTurbineController extends TileTurbinePart implements ITurbineCo
 	}
 	
 	@Override
-	public Class<? extends TurbineLogic> getLogicClass() {
-		return TurbineLogic.class;
-	}
-	
-	@Override
-	public TurbineLogic createNewLogic(TurbineLogic oldLogic) {
-		return new TurbineLogic(oldLogic);
+	public String getLogicID() {
+		return "turbine";
 	}
 	
 	@Override
@@ -54,18 +48,24 @@ public class TileTurbineController extends TileTurbinePart implements ITurbineCo
 	}
 	
 	@Override
+	public int[] weakSidesToCheck(World world, BlockPos pos) {
+		return new int[] {2, 3, 4, 5};
+	}
+	
+	@Override
 	@SideOnly(Side.CLIENT)
 	public AxisAlignedBB getRenderBoundingBox() {
 		if (!isRenderer || !isMultiblockAssembled()) {
 			return Block.FULL_BLOCK_AABB.offset(pos);
 		}
 		return new AxisAlignedBB(pos.add(getMultiblock().getMinX() - pos.getX(), getMultiblock().getMinY() - pos.getY(), getMultiblock().getMinZ() - pos.getZ()), pos.add(getMultiblock().getMaxX() - pos.getX(), getMultiblock().getMaxY() - pos.getY(), getMultiblock().getMaxZ() - pos.getZ()));
+		//return INFINITE_EXTENT_AABB;
 	}
 	
 	@Override
 	public void onBlockNeighborChanged(IBlockState state, World world, BlockPos pos, BlockPos fromPos) {
 		super.onBlockNeighborChanged(state, world, pos, fromPos);
-		if (getMultiblock() != null) getMultiblock().getLogic().setIsTurbineOn();
+		if (getMultiblock() != null) getLogic().setIsTurbineOn();
 	}
 	
 	@Override

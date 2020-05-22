@@ -3,11 +3,15 @@ package nc.recipe.ingredient;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import nc.integration.crafttweaker.ingredient.CTChanceFluidIngredient;
 import nc.recipe.IngredientMatchResult;
 import nc.recipe.IngredientSorption;
 import nc.util.NCMath;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.common.Optional;
 
 public class ChanceFluidIngredient implements IFluidIngredient {
 	
@@ -44,35 +48,10 @@ public class ChanceFluidIngredient implements IFluidIngredient {
 	public FluidStack getStack() {
 		return ingredient.getStack();
 	}
-
-	@Override
-	public String getIngredientName() {
-		return ingredient.getIngredientName() + " [ " + chancePercent + "%, diff: " + stackDiff + ", min: " + minStackSize + " ]";
-	}
-
-	@Override
-	public String getIngredientNamesConcat() {
-		return ingredient.getIngredientNamesConcat() + " [ " + chancePercent + "%, diff: " + stackDiff + ", min: " + minStackSize + " ]";
-	}
-
-	@Override
-	public int getMaxStackSize(int ingredientNumber) {
-		return ingredient.getMaxStackSize(0);
-	}
 	
-	@Override
-	public void setMaxStackSize(int stackSize) {
-		ingredient.setMaxStackSize(stackSize);
-	}
-	
-	@Override
-	public int getNextStackSize(int ingredientNumber) {
-		return minStackSize + stackDiff*NCMath.getBinomial(sizeIncrSteps, chancePercent);
-	}
-
 	@Override
 	public List<FluidStack> getInputStackList() {
-		List<FluidStack> stackList = new ArrayList<FluidStack>();
+		List<FluidStack> stackList = new ArrayList<>();
 		for (FluidStack stack : ingredient.getInputStackList()) {
 			int runningStackSize = minStackSize;
 			while (runningStackSize <= getMaxStackSize(0)) {
@@ -87,7 +66,7 @@ public class ChanceFluidIngredient implements IFluidIngredient {
 	
 	@Override
 	public List<FluidStack> getOutputStackList() {
-		List<FluidStack> stackList = new ArrayList<FluidStack>();
+		List<FluidStack> stackList = new ArrayList<>();
 		int runningStackSize = minStackSize;
 		while (runningStackSize <= getMaxStackSize(0)) {
 			FluidStack newStack = getStack().copy();
@@ -96,6 +75,44 @@ public class ChanceFluidIngredient implements IFluidIngredient {
 			runningStackSize += stackDiff;
 		}
 		return stackList;
+	}
+	
+	@Override
+	public int getMaxStackSize(int ingredientNumber) {
+		return ingredient.getMaxStackSize(0);
+	}
+	
+	@Override
+	public void setMaxStackSize(int stackSize) {
+		ingredient.setMaxStackSize(stackSize);
+	}
+	
+	@Override
+	public int getNextStackSize(int ingredientNumber) {
+		return minStackSize + stackDiff*NCMath.getBinomial(sizeIncrSteps, chancePercent);
+	}
+	
+	@Override
+	public String getIngredientName() {
+		return ingredient.getIngredientName() + " [ " + chancePercent + "%, diff: " + stackDiff + ", min: " + minStackSize + " ]";
+	}
+
+	@Override
+	public String getIngredientNamesConcat() {
+		return ingredient.getIngredientNamesConcat() + " [ " + chancePercent + "%, diff: " + stackDiff + ", min: " + minStackSize + " ]";
+	}
+	
+	@Override
+	public IntList getFactors() {
+		IntList list = ingredient.getFactors();
+		list.add(stackDiff);
+		list.add(minStackSize);
+		return new IntArrayList(list);
+	}
+	
+	@Override
+	public IFluidIngredient getFactoredIngredient(int factor) {
+		return new ChanceFluidIngredient(ingredient.getFactoredIngredient(factor), chancePercent, stackDiff/factor, minStackSize/factor);
 	}
 
 	@Override
@@ -106,5 +123,13 @@ public class ChanceFluidIngredient implements IFluidIngredient {
 	@Override
 	public boolean isValid() {
 		return ingredient.isValid();
+	}
+	
+	// CraftTweaker
+	
+	@Override
+	@Optional.Method(modid = "crafttweaker")
+	public crafttweaker.api.item.IIngredient ct() {
+		return CTChanceFluidIngredient.create(ingredient.ct(), chancePercent, stackDiff, minStackSize);
 	}
 }

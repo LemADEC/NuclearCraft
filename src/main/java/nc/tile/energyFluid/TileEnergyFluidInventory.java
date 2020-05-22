@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import nc.Global;
 import nc.tile.internal.energy.EnergyConnection;
 import nc.tile.internal.fluid.FluidConnection;
@@ -33,46 +34,30 @@ public abstract class TileEnergyFluidInventory extends TileEnergyFluid implement
 	private @Nonnull List<ItemOutputSetting> itemOutputSettings;
 	
 	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, @Nonnull EnergyConnection[] energyConnections, int fluidCapacity, List<String> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		this(name, size, inventoryConnections, capacity, capacity, energyConnections, fluidCapacity, fluidCapacity, allowedFluids, fluidConnections);
+		this(name, size, inventoryConnections, capacity, capacity, energyConnections, fluidCapacity, allowedFluids, fluidConnections);
 	}
 	
-	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, @Nonnull EnergyConnection[] energyConnections, @Nonnull List<Integer> fluidCapacity, List<List<String>> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		this(name, size, inventoryConnections, capacity, capacity, energyConnections, fluidCapacity, fluidCapacity, allowedFluids, fluidConnections);
-	}
-	
-	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, @Nonnull EnergyConnection[] energyConnections, int fluidCapacity, int maxFluidTransfer, List<String> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		this(name, size, inventoryConnections, capacity, capacity, energyConnections, fluidCapacity, maxFluidTransfer, allowedFluids, fluidConnections);
-	}
-	
-	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, @Nonnull EnergyConnection[] energyConnections, @Nonnull List<Integer> fluidCapacity, @Nonnull List<Integer> maxFluidTransfer, List<List<String>> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		this(name, size, inventoryConnections, capacity, capacity, energyConnections, fluidCapacity, maxFluidTransfer, allowedFluids, fluidConnections);
+	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, @Nonnull EnergyConnection[] energyConnections, @Nonnull IntList fluidCapacity, List<List<String>> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
+		this(name, size, inventoryConnections, capacity, capacity, energyConnections, fluidCapacity, allowedFluids, fluidConnections);
 	}
 	
 	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, int maxTransfer, @Nonnull EnergyConnection[] energyConnections, int fluidCapacity, List<String> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		this(name, size, inventoryConnections, capacity, maxTransfer, energyConnections, fluidCapacity, fluidCapacity, allowedFluids, fluidConnections);
-	}
-	
-	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, int maxTransfer, @Nonnull EnergyConnection[] energyConnections, @Nonnull List<Integer> fluidCapacity, List<List<String>> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		this(name, size, inventoryConnections, capacity, maxTransfer, energyConnections, fluidCapacity, fluidCapacity, allowedFluids, fluidConnections);
-	}
-	
-	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, int maxTransfer, @Nonnull EnergyConnection[] energyConnections, int fluidCapacity, int maxFluidTransfer, List<String> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		super(capacity, maxTransfer, energyConnections, fluidCapacity, maxFluidTransfer, allowedFluids, fluidConnections);
+		super(capacity, maxTransfer, energyConnections, fluidCapacity, allowedFluids, fluidConnections);
 		inventoryName = Global.MOD_ID + ".container." + name;
-		inventoryStacks = NonNullList.<ItemStack>withSize(size, ItemStack.EMPTY);
+		inventoryStacks = NonNullList.withSize(size, ItemStack.EMPTY);
 		this.inventoryConnections = inventoryConnections;
 		invWrapper = new InventoryTileWrapper(this);
-		itemOutputSettings = new ArrayList<ItemOutputSetting>();
+		itemOutputSettings = new ArrayList<>();
 		for (int i = 0; i < size; i++) itemOutputSettings.add(ItemOutputSetting.DEFAULT);
 	}
 	
-	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, int maxTransfer, @Nonnull EnergyConnection[] energyConnections, @Nonnull List<Integer> fluidCapacity, @Nonnull List<Integer> maxFluidTransfer, List<List<String>> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
-		super(capacity, maxTransfer, energyConnections, fluidCapacity, maxFluidTransfer, allowedFluids, fluidConnections);
+	public TileEnergyFluidInventory(String name, int size, @Nonnull InventoryConnection[] inventoryConnections, int capacity, int maxTransfer, @Nonnull EnergyConnection[] energyConnections, @Nonnull IntList fluidCapacity, List<List<String>> allowedFluids, @Nonnull FluidConnection[] fluidConnections) {
+		super(capacity, maxTransfer, energyConnections, fluidCapacity, allowedFluids, fluidConnections);
 		inventoryName = Global.MOD_ID + ".container." + name;
-		inventoryStacks = NonNullList.<ItemStack>withSize(size, ItemStack.EMPTY);
+		inventoryStacks = NonNullList.withSize(size, ItemStack.EMPTY);
 		this.inventoryConnections = inventoryConnections;
 		invWrapper = new InventoryTileWrapper(this);
-		itemOutputSettings = new ArrayList<ItemOutputSetting>();
+		itemOutputSettings = new ArrayList<>();
 		for (int i = 0; i < size; i++) itemOutputSettings.add(ItemOutputSetting.DEFAULT);
 	}
 	

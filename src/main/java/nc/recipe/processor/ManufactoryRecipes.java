@@ -1,5 +1,8 @@
 package nc.recipe.processor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.common.collect.Lists;
 
 import nc.config.NCConfig;
@@ -94,11 +97,14 @@ public class ManufactoryRecipes extends ProcessorRecipeHandler {
 		addLogRecipes();
 	}
 	
+	private static final List<String> BLACKLIST = Lists.newArrayList("silicon");
+	
 	public void addMetalProcessingRecipes() {
 		for (String ingot : OreDictionary.getOreNames()) {
 			if (ingot.startsWith("ingot")) {
-				String ore = "ore" + ingot.substring(5);
-				String dust = "dust" + ingot.substring(5);
+				String type = ingot.substring(5);
+				if (BLACKLIST.contains(type)) continue;
+				String ore = "ore" + type, dust = "dust" + type;
 				if (OreDictHelper.oreExists(dust)) {
 					addRecipe(ore, oreStack(dust, 2), 1.25D, 1D);
 					addRecipe(ingot, dust, 1D, 1D);
@@ -136,5 +142,14 @@ public class ManufactoryRecipes extends ProcessorRecipeHandler {
 				}
 			}
 		}
+	}
+	
+	@Override
+	public List fixExtras(List extras) {
+		List fixed = new ArrayList(3);
+		fixed.add(extras.size() > 0 && extras.get(0) instanceof Double ? (double) extras.get(0) : 1D);
+		fixed.add(extras.size() > 1 && extras.get(1) instanceof Double ? (double) extras.get(1) : 1D);
+		fixed.add(extras.size() > 2 && extras.get(2) instanceof Double ? (double) extras.get(2) : 0D);
+		return fixed;
 	}
 }

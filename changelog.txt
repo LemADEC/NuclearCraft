@@ -1,3 +1,175 @@
+v2o.2.6
+
+* Hopefully fixed shields producing incorrect amounts of heat
+* Hopefully fixed moderators sometimes not being correctly read as active
+
+* Fixed null-pointer crash on components updating
+* Fixed rare crash on toggling fission shields
+
+* Tweaked fission fuel efficiency configs
+* Fixed missing U-238 RTG recipe
+
+v2o.2.5
+
+* Multiblocks won't form if they contain an independent, disconnected part
+
+* Fixed some reactor components triggering continual reactor refreshes
+* Fixed neutron shields not producing the correct amount of flux
+* Fixed heating rate units in reactor GUIs
+
+v2o.2.4
+
++ Added turbine coil connector blocks to allow more coils to be connected to turbine dynamos
+* Turbines now have another efficiency multiplier that increases as the double logarithm of steam throughput
+
+* Fixed non-fuel fission components not correctly creating clusters
+
+v2o.2.3
+
+* Made multitool behaviour on quantum computer components consistent
+
+v2o.2.2
+
+* Massively optimised quantum computer memory use
+* Default max qubits config raised to seven
+
+* Fixed qubits, quantum gates and other blocks not correctly receiving indirect redstone signals
+
+* Fixed RTGs and multiblock batteries not correctly updating their capacities
+
+* Fixed crash on showing fission vessel and coolant heater recipes
+
+v2o.2.1
+
+* Fixed crash on activating a lone qubit with a redstone signal
+
+v2o.2.0
+
++ Added Molten Salt Reactors!
+* Interact with vessels and heaters using their respective filtered ports
+* Heaters will not block flux, but contribute none themselves and have zero moderator efficiency
+* Remove excess heat from the casing of a heat-positive MSR using emergency coolant via vents
+
++ Added Quantum Computers!
+* Simulate real quantum algorithms using many types of quantum gate on a configurable number of qubits
+* Do be careful when using more than five qubits - the memory cost can become large!
+
++ Batteries and RTGs now form multiblocks
+
+* Moderator lines of zero flux now contribute zero efficiency
+* Fixed fission shield managers occasionally not remembering their connected shields
+* Vents can now be toggled between input and output mode
+* Moved various reactor properties such as heat buffers into logic classes
+
+* Reorganised a huge number of configs
+
++ Finally added explicit server proxy
+
+* Fixed blindness radiation debuff flickering
+
+* Cleaned up many unnecessary method calls on block updates
+* Various other minor fixes, changes and refactors
+* Possible other things that I have forgotten
+- Removed Paulobrine and Herobrian
+
+v2o.1.2
+
++ Added fission neutron shields and shield managers to turn reactors off!
++ Added WIP fission monitors and power ports
++ Added multitool used to configure managers and monitors [thanks to Thiz for the texture!]
+
++ Added config to reduce all fluid recipes by their highest common factor
+* Machines can now process at rates of more than one recipe per tick
+
++ Added commands for setting world, player and chunk radius radiation levels
++ Added config for custom mob max radiation counts
+
+* Began preparation for implementing pebble bed and molten salt fission reactors
+
+- Removed various unnecessary pre-overhaul classes
+* Huge amounts of small backend performance improvements and refactors
+
+v2o.1.1
+
+* Split fission ports into multiple types
+* Fixed known fission port filtering bugs
+* Filters can now only be modified while the reactor is disassembled
+
++ Improved API support for custom cluster and fuel component behaviour
++ Added API support for custom port-target linking
+
+* Tweaked many fission fuel stats, sink cooling rates and sink placement rules [thanks as ever to Hellrage for keeping the planner updated!]
+* Fission irradiator recipes now have independent efficiencies
+
+* Fixed self-priming fuels not updating correctly
+* Only fission reflectors with 100% reflectivity block neutron sources
+
+* Fixed low-throughput turbines producing wrong amounts of power
+
++ Added many new CT methods for extracting info from registered recipes
+* All fission fuels now have stat tooltips, including those given recipes via CT
+
+* Multiple blocks can now be highlighted at once
+
+* Various other minor fixes, changes and refactors
+* Includes all fixes introduced in v2.18p
+* Possible other things that I have forgotten
+
+v2o.1.0
+
++ Added fission port and cell filtering for multi-fuel reactor designs!
+
++ Added fission irradiator efficiency multiplier config
+
+* Various other minor fixes, changes and refactors
+- Removed Paulobrine and Herobrian
+
+v2o.0.8
+
++ Added fission neutron irradiator and various new materials
+* Expanded fission reactor API to accommodate generic neutron flux acceptors
+
+* Tweaked copper and bronze textures
+
+v2o.0.7
+
+* Vastly improved multiblock logic NBT reading and writing
+
+* Revamped the fission fuel reprocessing tree
++ Added fission fuel self-priming characteristic and corresponding configs
++ Added lead-steel neutron reflector
+
++ Added assembler machine
+* The fuel reprocessor now has six output slots
+- Removed irradiator machine
+
++ Added turbine throughput penalties
+
++ Added missing MSR coolants
+* Changed many fission material recipes and removed molten ZA fission fluids
+
+* Fixed broken advancements
+
+* Various other minor fixes, changes and refactors
+
+v2o.0.6
+
+* Revamped scrubbers to have a recipe system with CT support
+
+* All units now use ticks and not seconds - a config regeneration is recommended!
+
+* Fixed recipes involving empty ingredients not being cached
+* Fixed stack overflow error caused by deep recursion in recipe generation
+
+* Fixed missing radium recipe
++ Added radiation JEI info to irradiating recipes
+
+* Replaced recursive reactor search algorithm with iterative one
+* Fixed fission ports updating unnecessarily
++ Added configs for reactor sound effect volumes
+
+* Feral Ghoul spawners now ignore the natural spawning limitations
+
 v2o.0.5
 
 + Implemented multiblock logic system - addons can introduce their own mechanics!

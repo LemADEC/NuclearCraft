@@ -58,7 +58,7 @@ import net.minecraftforge.common.ForgeHooks;
 
 public class EntityFeralGhoul extends EntityZombie {
 	
-	private static final DataParameter<Byte> CLIMBING = EntityDataManager.<Byte>createKey(EntityFeralGhoul.class, DataSerializers.BYTE);
+	private static final DataParameter<Byte> CLIMBING = EntityDataManager.createKey(EntityFeralGhoul.class, DataSerializers.BYTE);
 	
 	public EntityFeralGhoul(World world) {
 		super(world);
@@ -144,7 +144,7 @@ public class EntityFeralGhoul extends EntityZombie {
 	
 	@Override
 	public void onUpdate() {
-		if (!NCConfig.entity_register[0]) {
+		if (!NCConfig.register_entity[0]) {
 			setDead();
 			return;
 		}
@@ -183,7 +183,8 @@ public class EntityFeralGhoul extends EntityZombie {
 	
 	@Override
 	public boolean getCanSpawnHere() {
-		return super.getCanSpawnHere() && world.canSeeSky(new BlockPos(posX, getEntityBoundingBox().minY, posZ)) && world.countEntities(EntityFeralGhoul.class) < 10;
+		// Spawning limitations controlled in EntityHandler
+		return super.getCanSpawnHere();
 	}
 	
 	@Override

@@ -73,13 +73,13 @@ public class TileFissionComputerPort extends TileFissionPart implements SimpleCo
 	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getHeatStored(Context context, Arguments args) {
-		return new Object[] {isMultiblockAssembled() ? getMultiblock().heatBuffer.getHeatStored() : 0L};
+		return new Object[] {isMultiblockAssembled() ? getMultiblock().getLogic().heatBuffer.getHeatStored() : 0L};
 	}
 	
 	@Callback
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getHeatCapacity(Context context, Arguments args) {
-		return new Object[] {isMultiblockAssembled() ? getMultiblock().heatBuffer.getHeatCapacity() : 0L};
+		return new Object[] {isMultiblockAssembled() ? getMultiblock().getLogic().heatBuffer.getHeatCapacity() : 0L};
 	}
 	
 	@Callback
@@ -141,7 +141,7 @@ public class TileFissionComputerPort extends TileFissionPart implements SimpleCo
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getVesselStats(Context context, Arguments args) {
 		if (isMultiblockAssembled()) {
-			List<Object[]> stats = new ArrayList<Object[]>();
+			List<Object[]> stats = new ArrayList<>();
 			for (TileSaltFissionVessel vessel : getMultiblock().getVessels()) {
 				stats.add(new Object[] {
 						new Object[] {vessel.getPos().getX(), vessel.getPos().getY(), vessel.getPos().getZ()},
@@ -162,7 +162,7 @@ public class TileFissionComputerPort extends TileFissionPart implements SimpleCo
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getHeaterStats(Context context, Arguments args) {
 		if (isMultiblockAssembled()) {
-			List<Object[]> stats = new ArrayList<Object[]>();
+			List<Object[]> stats = new ArrayList<>();
 			for (TileSaltFissionHeater heater : getMultiblock().getHeaters()) {
 				stats.add(new Object[] {
 						new Object[] {heater.getPos().getX(), heater.getPos().getY(), heater.getPos().getZ()},
@@ -183,7 +183,7 @@ public class TileFissionComputerPort extends TileFissionPart implements SimpleCo
 	@Optional.Method(modid = "opencomputers")
 	public Object[] getModeratorStats(Context context, Arguments args) {
 		if (isMultiblockAssembled()) {
-			List<Object[]> stats = new ArrayList<Object[]>();
+			List<Object[]> stats = new ArrayList<>();
 			for (TileSaltFissionModerator moderator : getMultiblock().getModerators()) {
 				stats.add(new Object[] {
 						new Object[] {moderator.getPos().getX(), moderator.getPos().getY(), moderator.getPos().getZ()},

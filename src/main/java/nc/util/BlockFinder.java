@@ -1,4 +1,4 @@
-package nc.util;
+/*package nc.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +63,7 @@ public class BlockFinder {
 	}
 	
 	public boolean findOre(BlockPos pos, String... names) {
-		List<ItemStack> stackList = new ArrayList<ItemStack>();
+		List<ItemStack> stackList = new ArrayList<>();
 		for (int i = 0; i < names.length; i++) {
 			List<ItemStack> stacks = OreDictionary.getOres(names[i], false);
 			stackList.addAll(stacks);
@@ -263,3 +263,4 @@ public class BlockFinder {
 		return position(randomBetween(xMin, xMax), randomBetween(yMin, yMax), randomBetween(zMin, zMax));
 	}
 }
+*/

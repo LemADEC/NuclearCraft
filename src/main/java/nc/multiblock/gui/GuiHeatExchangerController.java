@@ -37,13 +37,13 @@ public class GuiHeatExchangerController extends GuiMultiblockController<HeatExch
 	
 	@Override
 	public void renderTooltips(int mouseX, int mouseY) {
-		if (NCUtil.isModifierKeyDown()) drawTooltip(clearAllFluidsInfo(), mouseX, mouseY, 153, 35, 18, 18);
+		if (NCUtil.isModifierKeyDown()) drawTooltip(clearAllInfo(), mouseX, mouseY, 153, 35, 18, 18);
 		
 		drawEfficiencyTooltip(mouseX, mouseY, 6, 57, 164, 6);
 	}
 	
 	public List<String> efficiencyInfo() {
-		List<String> info = new ArrayList<String>();
+		List<String> info = new ArrayList<>();
 		info.add(TextFormatting.LIGHT_PURPLE + Lang.localise("gui.nc.container.heat_exchanger_controller.active_percent") + " " + TextFormatting.WHITE + NCMath.decimalPlaces(multiblock.fractionOfTubesActive*100D, 1) + "%");
 		info.add(TextFormatting.AQUA + Lang.localise("gui.nc.container.heat_exchanger_controller.efficiency" + (NCUtil.isModifierKeyDown() ? "_max" : "")) + " " + TextFormatting.WHITE + NCMath.decimalPlaces((NCUtil.isModifierKeyDown() ? multiblock.maxEfficiency : multiblock.efficiency)*100D, 1) + "%");
 		return info;

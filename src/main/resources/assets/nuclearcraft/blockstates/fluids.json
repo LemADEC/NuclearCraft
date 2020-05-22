@@ -260,6 +260,12 @@
 				"fluid": "radaway_slow"
 			}
 		},
+		"fluid_redstone_ethanol": {
+			"model": "forge:fluid",
+			"custom": {
+				"fluid": "redstone_ethanol"
+			}
+		},
 		"fluid_beryllium": {
 			"model": "forge:fluid",
 			"custom": {
@@ -362,6 +368,18 @@
 				"fluid": "corium"
 			}
 		},
+		"fluid_ice": {
+			"model": "forge:fluid",
+			"custom": {
+				"fluid": "ice"
+			}
+		},
+		"fluid_slurry_ice": {
+			"model": "forge:fluid",
+			"custom": {
+				"fluid": "slurry_ice"
+			}
+		},
 		"fluid_chocolate_liquor": {
 			"model": "forge:fluid",
 			"custom": {
@@ -458,6 +476,18 @@
 				"fluid": "nak_hot"
 			}
 		},
+		"fluid_emergency_coolant": {
+			"model": "forge:fluid",
+			"custom": {
+				"fluid": "emergency_coolant"
+			}
+		},
+		"fluid_emergency_coolant_heated": {
+			"model": "forge:fluid",
+			"custom": {
+				"fluid": "emergency_coolant_heated"
+			}
+		},
 		"fluid_sodium_fluoride_solution": {
 			"model": "forge:fluid",
 			"custom": {
@@ -486,6 +516,12 @@
 			"model": "forge:fluid",
 			"custom": {
 				"fluid": "borax_solution"
+			}
+		},
+		"fluid_irradiated_borax_solution": {
+			"model": "forge:fluid",
+			"custom": {
+				"fluid": "irradiated_borax_solution"
 			}
 		},
 		"fluid_naoh": {

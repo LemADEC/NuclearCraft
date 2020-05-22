@@ -6,12 +6,15 @@ import com.google.common.collect.Lists;
 
 import nc.block.tile.INBTDrop;
 import nc.tile.ITile;
+import nc.util.NCInventoryHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
@@ -52,6 +55,16 @@ public class NCBlock extends Block {
 		}
 	}
 	
+	// Inventory
+	
+	public void dropItems(World world, BlockPos pos, IInventory inventory) {
+		InventoryHelper.dropInventoryItems(world, pos, inventory);
+	}
+	
+	public void dropItems(World world, BlockPos pos, List<ItemStack> stacks) {
+		NCInventoryHelper.dropInventoryItems(world, pos, stacks);
+	}
+	
 	// NBT Stuff
 	
 	@Override
@@ -67,10 +80,12 @@ public class NCBlock extends Block {
 	}
 	
 	@Override
-	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase player, ItemStack stack) {
-		world.setBlockState(pos, state, 2);
-		if (this instanceof INBTDrop && stack.hasTagCompound()) ((INBTDrop)this).readStackData(world, pos, player, stack);
-		world.notifyBlockUpdate(pos, state, state, 3);
+	public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+		super.onBlockPlacedBy(world, pos, state, placer, stack);
+		if (this instanceof INBTDrop && stack.hasTagCompound()) {
+			((INBTDrop)this).readStackData(world, pos, placer, stack);
+			world.notifyBlockUpdate(pos, state, state, 3);
+		}
 	}
 	
 	// Transparent Block
@@ -92,7 +107,7 @@ public class NCBlock extends Block {
 		public BlockRenderLayer getRenderLayer() {
 			return BlockRenderLayer.CUTOUT;
 		}
-
+		
 		@Override
 		public boolean isFullCube(IBlockState state) {
 			return false;

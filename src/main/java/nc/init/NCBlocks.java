@@ -9,7 +9,6 @@ import nc.block.NCBlockMushroom;
 import nc.block.item.ItemBlockMeta;
 import nc.block.item.NCItemBlock;
 import nc.block.item.energy.ItemBlockBattery;
-import nc.block.tile.BlockBattery;
 import nc.block.tile.BlockSimpleTile;
 import nc.block.tile.ITileType;
 import nc.block.tile.dummy.BlockMachineInterface;
@@ -21,15 +20,27 @@ import nc.config.NCConfig;
 import nc.enumm.BlockEnums.ProcessorType;
 import nc.enumm.BlockEnums.SimpleTileType;
 import nc.enumm.MetaEnums;
+import nc.multiblock.battery.BatteryType;
+import nc.multiblock.battery.block.BlockBattery;
 import nc.multiblock.fission.block.BlockFissionCasing;
 import nc.multiblock.fission.block.BlockFissionComputerPort;
 import nc.multiblock.fission.block.BlockFissionConductor;
 import nc.multiblock.fission.block.BlockFissionGlass;
-import nc.multiblock.fission.block.BlockFissionPort;
+import nc.multiblock.fission.block.BlockFissionIrradiator;
+import nc.multiblock.fission.block.BlockFissionMonitor;
+import nc.multiblock.fission.block.BlockFissionPowerPort;
+import nc.multiblock.fission.block.BlockFissionShield;
 import nc.multiblock.fission.block.BlockFissionSource;
 import nc.multiblock.fission.block.BlockFissionVent;
+import nc.multiblock.fission.block.manager.BlockFissionShieldManager;
+import nc.multiblock.fission.block.port.BlockFissionCellPort;
+import nc.multiblock.fission.block.port.BlockFissionHeaterPort;
+import nc.multiblock.fission.block.port.BlockFissionHeaterPort2;
+import nc.multiblock.fission.block.port.BlockFissionIrradiatorPort;
+import nc.multiblock.fission.block.port.BlockFissionVesselPort;
 import nc.multiblock.fission.salt.block.BlockSaltFissionController;
 import nc.multiblock.fission.salt.block.BlockSaltFissionHeater;
+import nc.multiblock.fission.salt.block.BlockSaltFissionHeater2;
 import nc.multiblock.fission.salt.block.BlockSaltFissionVessel;
 import nc.multiblock.fission.solid.block.BlockSolidFissionCell;
 import nc.multiblock.fission.solid.block.BlockSolidFissionController;
@@ -44,9 +55,17 @@ import nc.multiblock.heatExchanger.block.BlockHeatExchangerController;
 import nc.multiblock.heatExchanger.block.BlockHeatExchangerGlass;
 import nc.multiblock.heatExchanger.block.BlockHeatExchangerTube;
 import nc.multiblock.heatExchanger.block.BlockHeatExchangerVent;
+import nc.multiblock.qComputer.QuantumComputerGateEnums;
+import nc.multiblock.qComputer.block.BlockQuantumComputerConnector;
+import nc.multiblock.qComputer.block.BlockQuantumComputerController;
+import nc.multiblock.qComputer.block.BlockQuantumComputerGate;
+import nc.multiblock.qComputer.block.BlockQuantumComputerQubit;
+import nc.multiblock.rtg.RTGType;
+import nc.multiblock.rtg.block.BlockRTG;
 import nc.multiblock.turbine.TurbineDynamoCoilType;
 import nc.multiblock.turbine.TurbineRotorBladeUtil.TurbineRotorBladeType;
 import nc.multiblock.turbine.block.BlockTurbineCasing;
+import nc.multiblock.turbine.block.BlockTurbineCoilConnector;
 import nc.multiblock.turbine.block.BlockTurbineComputerPort;
 import nc.multiblock.turbine.block.BlockTurbineController;
 import nc.multiblock.turbine.block.BlockTurbineDynamoCoil;
@@ -59,7 +78,6 @@ import nc.multiblock.turbine.block.BlockTurbineRotorShaft;
 import nc.multiblock.turbine.block.BlockTurbineRotorStator;
 import nc.radiation.RadiationHelper;
 import nc.tab.NCTabs;
-import nc.tile.energy.battery.BatteryType;
 import nc.util.InfoHelper;
 import nc.util.Lang;
 import nc.util.NCMath;
@@ -87,7 +105,7 @@ public class NCBlocks {
 	
 	public static Block nuclear_furnace;
 	public static Block manufactory;
-	public static Block isotope_separator;
+	public static Block separator;
 	public static Block decay_hastener;
 	public static Block fuel_reprocessor;
 	public static Block alloy_furnace;
@@ -95,7 +113,7 @@ public class NCBlocks {
 	public static Block melter;
 	public static Block supercooler;
 	public static Block electrolyzer;
-	public static Block irradiator;
+	public static Block assembler;
 	public static Block ingot_former;
 	public static Block pressurizer;
 	public static Block chemical_reactor;
@@ -124,6 +142,7 @@ public class NCBlocks {
 	public static Block voltaic_pile_advanced;
 	public static Block voltaic_pile_du;
 	public static Block voltaic_pile_elite;
+	
 	public static Block lithium_ion_battery_basic;
 	public static Block lithium_ion_battery_advanced;
 	public static Block lithium_ion_battery_du;
@@ -134,11 +153,24 @@ public class NCBlocks {
 	public static Block fission_casing;
 	public static Block fission_glass;
 	public static Block fission_conductor;
+	public static Block fission_monitor;
 	public static Block fission_reflector;
-	public static Block fission_port;
+	public static Block fission_power_port;
 	public static Block fission_vent;
+	public static Block fission_irradiator;
 	public static Block fission_source;
+	public static Block fission_shield;
 	public static Block fission_computer_port;
+	
+	public static Block fission_irradiator_port;
+	
+	public static Block fission_cell_port;
+	
+	public static Block fission_vessel_port;
+	public static Block fission_heater_port;
+	public static Block fission_heater_port2;
+	
+	public static Block fission_shield_manager;
 	
 	public static Block solid_fission_controller;
 	public static Block solid_fission_cell;
@@ -148,6 +180,7 @@ public class NCBlocks {
 	public static Block salt_fission_controller;
 	public static Block salt_fission_vessel;
 	public static Block salt_fission_heater;
+	public static Block salt_fission_heater2;
 	
 	public static Block heat_exchanger_controller;
 	public static Block heat_exchanger_casing;
@@ -173,6 +206,7 @@ public class NCBlocks {
 	public static Block turbine_rotor_stator;
 	public static Block turbine_rotor_bearing;
 	public static Block turbine_dynamo_coil;
+	public static Block turbine_coil_connector;
 	public static Block turbine_inlet;
 	public static Block turbine_outlet;
 	public static Block turbine_computer_port;
@@ -199,7 +233,15 @@ public class NCBlocks {
 	public static Block tritium_lamp;
 	public static Block tritium_lantern;
 	
-	//public static Block spin;
+	public static Block quantum_computer_controller;
+	public static Block quantum_computer_qubit;
+	
+	public static Block quantum_computer_gate_single;
+	public static Block quantum_computer_gate_control;
+	public static Block quantum_computer_gate_swap;
+	
+	public static Block quantum_computer_connector;
+	//public static Block quantum_computer_port;
 	
 	public static void init() {
 		ore = withName(new BlockMeta.BlockOre(), "ore");
@@ -213,7 +255,7 @@ public class NCBlocks {
 		
 		if (NCConfig.register_processor[0]) nuclear_furnace = withName(new BlockNuclearFurnace(), "nuclear_furnace");
 		if (NCConfig.register_processor[1]) manufactory = withName(new BlockProcessor(ProcessorType.MANUFACTORY));
-		if (NCConfig.register_processor[2]) isotope_separator = withName(new BlockProcessor(ProcessorType.ISOTOPE_SEPARATOR));
+		if (NCConfig.register_processor[2]) separator = withName(new BlockProcessor(ProcessorType.SEPARATOR));
 		if (NCConfig.register_processor[3]) decay_hastener = withName(new BlockProcessor(ProcessorType.DECAY_HASTENER));
 		if (NCConfig.register_processor[4]) fuel_reprocessor = withName(new BlockProcessor(ProcessorType.FUEL_REPROCESSOR));
 		if (NCConfig.register_processor[5]) alloy_furnace = withName(new BlockProcessor(ProcessorType.ALLOY_FURNACE));
@@ -221,7 +263,7 @@ public class NCBlocks {
 		if (NCConfig.register_processor[7]) melter = withName(new BlockProcessor(ProcessorType.MELTER));
 		if (NCConfig.register_processor[8]) supercooler = withName(new BlockProcessor(ProcessorType.SUPERCOOLER));
 		if (NCConfig.register_processor[9]) electrolyzer = withName(new BlockProcessor(ProcessorType.ELECTROLYZER));
-		if (NCConfig.register_processor[10]) irradiator = withName(new BlockProcessor(ProcessorType.IRRADIATOR));
+		if (NCConfig.register_processor[10]) assembler = withName(new BlockProcessor(ProcessorType.ASSEMBLER));
 		if (NCConfig.register_processor[11]) ingot_former = withName(new BlockProcessor(ProcessorType.INGOT_FORMER));
 		if (NCConfig.register_processor[12]) pressurizer = withName(new BlockProcessor(ProcessorType.PRESSURIZER));
 		if (NCConfig.register_processor[13]) chemical_reactor = withName(new BlockProcessor(ProcessorType.CHEMICAL_REACTOR));
@@ -234,10 +276,10 @@ public class NCBlocks {
 		
 		machine_interface = withName(new BlockMachineInterface(SimpleTileType.MACHINE_INTERFACE));
 		
-		rtg_uranium = withName(new BlockSimpleTile(SimpleTileType.RTG_URANIUM));
-		rtg_plutonium = withName(new BlockSimpleTile(SimpleTileType.RTG_PLUTONIUM));
-		rtg_americium = withName(new BlockSimpleTile(SimpleTileType.RTG_AMERICIUM));
-		rtg_californium = withName(new BlockSimpleTile(SimpleTileType.RTG_CALIFORNIUM));
+		rtg_uranium = withName(new BlockRTG(RTGType.URANIUM), "rtg_uranium");
+		rtg_plutonium = withName(new BlockRTG(RTGType.PLUTONIUM), "rtg_plutonium");
+		rtg_americium = withName(new BlockRTG(RTGType.AMERICIUM), "rtg_americium");
+		rtg_californium = withName(new BlockRTG(RTGType.CALIFORNIUM), "rtg_californium");
 		
 		solar_panel_basic = withName(new BlockSimpleTile(SimpleTileType.SOLAR_PANEL_BASIC));
 		solar_panel_advanced = withName(new BlockSimpleTile(SimpleTileType.SOLAR_PANEL_ADVANCED));
@@ -246,26 +288,43 @@ public class NCBlocks {
 		
 		decay_generator = withName(new BlockSimpleTile(SimpleTileType.DECAY_GENERATOR));
 		
-		voltaic_pile_basic = withName(new BlockBattery(SimpleTileType.VOLTAIC_PILE_BASIC));
-		voltaic_pile_advanced = withName(new BlockBattery(SimpleTileType.VOLTAIC_PILE_ADVANCED));
-		voltaic_pile_du = withName(new BlockBattery(SimpleTileType.VOLTAIC_PILE_DU));
-		voltaic_pile_elite = withName(new BlockBattery(SimpleTileType.VOLTAIC_PILE_ELITE));
+		if (NCConfig.register_battery[0]) {
+			voltaic_pile_basic = withName(new BlockBattery(BatteryType.VOLTAIC_PILE_BASIC), "voltaic_pile_basic");
+			voltaic_pile_advanced = withName(new BlockBattery(BatteryType.VOLTAIC_PILE_ADVANCED), "voltaic_pile_advanced");
+			voltaic_pile_du = withName(new BlockBattery(BatteryType.VOLTAIC_PILE_DU), "voltaic_pile_du");
+			voltaic_pile_elite = withName(new BlockBattery(BatteryType.VOLTAIC_PILE_ELITE), "voltaic_pile_elite");
+		}
 		
-		lithium_ion_battery_basic = withName(new BlockBattery(SimpleTileType.LITHIUM_ION_BATTERY_BASIC));
-		lithium_ion_battery_advanced = withName(new BlockBattery(SimpleTileType.LITHIUM_ION_BATTERY_ADVANCED));
-		lithium_ion_battery_du = withName(new BlockBattery(SimpleTileType.LITHIUM_ION_BATTERY_DU));
-		lithium_ion_battery_elite = withName(new BlockBattery(SimpleTileType.LITHIUM_ION_BATTERY_ELITE));	
+		if (NCConfig.register_battery[1]) {
+			lithium_ion_battery_basic = withName(new BlockBattery(BatteryType.LITHIUM_ION_BATTERY_BASIC), "lithium_ion_battery_basic");
+			lithium_ion_battery_advanced = withName(new BlockBattery(BatteryType.LITHIUM_ION_BATTERY_ADVANCED), "lithium_ion_battery_advanced");
+			lithium_ion_battery_du = withName(new BlockBattery(BatteryType.LITHIUM_ION_BATTERY_DU), "lithium_ion_battery_du");
+			lithium_ion_battery_elite = withName(new BlockBattery(BatteryType.LITHIUM_ION_BATTERY_ELITE), "lithium_ion_battery_elite");	
+		}
 		
 		bin = withName(new BlockSimpleTile(SimpleTileType.BIN));
 		
 		fission_casing = withName(new BlockFissionCasing(), "fission_casing");
 		fission_glass = withName(new BlockFissionGlass(), "fission_glass");
 		fission_conductor = withName(new BlockFissionConductor(), "fission_conductor");
-		fission_reflector = withName(new NCBlock(Material.IRON), "fission_reflector");
-		fission_port = withName(new BlockFissionPort(), "fission_port");
+		fission_monitor = withName(new BlockFissionMonitor(), "fission_monitor");
+		fission_reflector = withName(new BlockMeta.BlockFissionReflector(), "fission_reflector");
+		fission_power_port = withName(new BlockFissionPowerPort(), "fission_power_port");
 		fission_vent = withName(new BlockFissionVent(), "fission_vent");
+		fission_irradiator = withName(new BlockFissionIrradiator(), "fission_irradiator");
 		fission_source = withName(new BlockFissionSource(), "fission_source");
+		fission_shield = withName(new BlockFissionShield(), "fission_shield");
 		fission_computer_port = withName(new BlockFissionComputerPort(), "fission_computer_port");
+		
+		fission_irradiator_port = withName(new BlockFissionIrradiatorPort(), "fission_irradiator_port");
+		
+		fission_cell_port = withName(new BlockFissionCellPort(), "fission_cell_port");
+		
+		fission_vessel_port = withName(new BlockFissionVesselPort(), "fission_vessel_port");
+		fission_heater_port = withName(new BlockFissionHeaterPort(), "fission_heater_port");
+		fission_heater_port2 = withName(new BlockFissionHeaterPort2(), "fission_heater_port2");
+		
+		fission_shield_manager = withName(new BlockFissionShieldManager(), "fission_shield_manager");
 		
 		solid_fission_controller = withName(new BlockSolidFissionController(), "solid_fission_controller");
 		solid_fission_cell = withName(new BlockSolidFissionCell(), "solid_fission_cell");
@@ -275,6 +334,7 @@ public class NCBlocks {
 		salt_fission_controller = withName(new BlockSaltFissionController(), "salt_fission_controller");
 		salt_fission_vessel = withName(new BlockSaltFissionVessel(), "salt_fission_vessel");
 		salt_fission_heater = withName(new BlockSaltFissionHeater(), "salt_fission_heater");
+		salt_fission_heater2 = withName(new BlockSaltFissionHeater2(), "salt_fission_heater2");
 		
 		heat_exchanger_controller = withName(new BlockHeatExchangerController(), "heat_exchanger_controller");
 		heat_exchanger_casing = withName(new BlockHeatExchangerCasing(), "heat_exchanger_casing");
@@ -300,6 +360,7 @@ public class NCBlocks {
 		turbine_rotor_stator = withName(new BlockTurbineRotorStator(), "turbine_rotor_stator");
 		turbine_rotor_bearing = withName(new BlockTurbineRotorBearing(), "turbine_rotor_bearing");
 		turbine_dynamo_coil = withName(new BlockTurbineDynamoCoil(), "turbine_dynamo_coil");
+		turbine_coil_connector = withName(new BlockTurbineCoilConnector(), "turbine_coil_connector");
 		turbine_inlet = withName(new BlockTurbineInlet(), "turbine_inlet");
 		turbine_outlet = withName(new BlockTurbineOutlet(), "turbine_outlet");
 		turbine_computer_port = withName(new BlockTurbineComputerPort(), "turbine_computer_port");
@@ -331,7 +392,17 @@ public class NCBlocks {
 		
 		tritium_lamp = withName(new NCBlock(Material.GLASS).setCreativeTab(NCTabs.MISC).setLightLevel(1F), "tritium_lamp");
 		
-		//spin = withName(new BlockSpin(), "spin");
+		if (NCConfig.register_quantum) {
+			quantum_computer_controller = withName(new BlockQuantumComputerController(), "quantum_computer_controller");
+			quantum_computer_qubit = withName(new BlockQuantumComputerQubit(), "quantum_computer_qubit");
+			
+			quantum_computer_gate_single = withName(new BlockQuantumComputerGate.Single(), "quantum_computer_gate_single");
+			quantum_computer_gate_control = withName(new BlockQuantumComputerGate.Control(), "quantum_computer_gate_control");
+			quantum_computer_gate_swap = withName(new BlockQuantumComputerGate.Swap(), "quantum_computer_gate_swap");
+			
+			quantum_computer_connector = withName(new BlockQuantumComputerConnector(), "quantum_computer_connector");
+			//quantum_computer_port = withName(new BlockQuantumComputerPort(), "quantum_computer_port");
+		}
 	}
 	
 	public static void register() {
@@ -346,7 +417,7 @@ public class NCBlocks {
 		
 		if (NCConfig.register_processor[0]) registerBlock(nuclear_furnace);
 		if (NCConfig.register_processor[1]) registerBlock(manufactory);
-		if (NCConfig.register_processor[2]) registerBlock(isotope_separator);
+		if (NCConfig.register_processor[2]) registerBlock(separator);
 		if (NCConfig.register_processor[3]) registerBlock(decay_hastener);
 		if (NCConfig.register_processor[4]) registerBlock(fuel_reprocessor);
 		if (NCConfig.register_processor[5]) registerBlock(alloy_furnace);
@@ -354,7 +425,7 @@ public class NCBlocks {
 		if (NCConfig.register_processor[7]) registerBlock(melter);
 		if (NCConfig.register_processor[8]) registerBlock(supercooler);
 		if (NCConfig.register_processor[9]) registerBlock(electrolyzer);
-		if (NCConfig.register_processor[10]) registerBlock(irradiator);
+		if (NCConfig.register_processor[10]) registerBlock(assembler);
 		if (NCConfig.register_processor[11]) registerBlock(ingot_former);
 		if (NCConfig.register_processor[12]) registerBlock(pressurizer);
 		if (NCConfig.register_processor[13]) registerBlock(chemical_reactor);
@@ -379,26 +450,43 @@ public class NCBlocks {
 		
 		registerBlock(decay_generator);
 		
-		registerBlock(voltaic_pile_basic, new ItemBlockBattery(voltaic_pile_basic, BatteryType.VOLTAIC_PILE_BASIC, InfoHelper.formattedInfo(infoLine("energy_storage"))));
-		registerBlock(voltaic_pile_advanced, new ItemBlockBattery(voltaic_pile_advanced, BatteryType.VOLTAIC_PILE_ADVANCED, InfoHelper.formattedInfo(infoLine("energy_storage"))));
-		registerBlock(voltaic_pile_du, new ItemBlockBattery(voltaic_pile_du, BatteryType.VOLTAIC_PILE_DU, InfoHelper.formattedInfo(infoLine("energy_storage"))));
-		registerBlock(voltaic_pile_elite, new ItemBlockBattery(voltaic_pile_elite, BatteryType.VOLTAIC_PILE_ELITE, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+		if (NCConfig.register_battery[0]) {
+			registerBlock(voltaic_pile_basic, new ItemBlockBattery(voltaic_pile_basic, BatteryType.VOLTAIC_PILE_BASIC, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+			registerBlock(voltaic_pile_advanced, new ItemBlockBattery(voltaic_pile_advanced, BatteryType.VOLTAIC_PILE_ADVANCED, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+			registerBlock(voltaic_pile_du, new ItemBlockBattery(voltaic_pile_du, BatteryType.VOLTAIC_PILE_DU, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+			registerBlock(voltaic_pile_elite, new ItemBlockBattery(voltaic_pile_elite, BatteryType.VOLTAIC_PILE_ELITE, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+		}
 		
-		registerBlock(lithium_ion_battery_basic, new ItemBlockBattery(lithium_ion_battery_basic, BatteryType.LITHIUM_ION_BATTERY_BASIC, InfoHelper.formattedInfo(infoLine("energy_storage"))));
-		registerBlock(lithium_ion_battery_advanced, new ItemBlockBattery(lithium_ion_battery_advanced, BatteryType.LITHIUM_ION_BATTERY_ADVANCED, InfoHelper.formattedInfo(infoLine("energy_storage"))));
-		registerBlock(lithium_ion_battery_du, new ItemBlockBattery(lithium_ion_battery_du, BatteryType.LITHIUM_ION_BATTERY_DU, InfoHelper.formattedInfo(infoLine("energy_storage"))));
-		registerBlock(lithium_ion_battery_elite, new ItemBlockBattery(lithium_ion_battery_elite, BatteryType.LITHIUM_ION_BATTERY_ELITE, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+		if (NCConfig.register_battery[1]) {
+			registerBlock(lithium_ion_battery_basic, new ItemBlockBattery(lithium_ion_battery_basic, BatteryType.LITHIUM_ION_BATTERY_BASIC, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+			registerBlock(lithium_ion_battery_advanced, new ItemBlockBattery(lithium_ion_battery_advanced, BatteryType.LITHIUM_ION_BATTERY_ADVANCED, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+			registerBlock(lithium_ion_battery_du, new ItemBlockBattery(lithium_ion_battery_du, BatteryType.LITHIUM_ION_BATTERY_DU, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+			registerBlock(lithium_ion_battery_elite, new ItemBlockBattery(lithium_ion_battery_elite, BatteryType.LITHIUM_ION_BATTERY_ELITE, InfoHelper.formattedInfo(infoLine("energy_storage"))));
+		}
 		
 		registerBlock(bin);
 		
 		registerBlock(fission_casing);
 		registerBlock(fission_glass);
 		registerBlock(fission_conductor);
-		registerBlock(fission_reflector);
-		registerBlock(fission_port);
+		registerBlock(fission_monitor);
+		registerBlock(fission_reflector, new ItemBlockMeta(fission_reflector, MetaEnums.NeutronReflectorType.class, TextFormatting.AQUA));
+		registerBlock(fission_power_port);
 		registerBlock(fission_vent);
+		registerBlock(fission_irradiator);
 		registerBlock(fission_source, new ItemBlockMeta(fission_source, MetaEnums.NeutronSourceType.class, TextFormatting.LIGHT_PURPLE, NCInfo.neutronSourceFixedInfo(), TextFormatting.AQUA, NCInfo.neutronSourceInfo()));
+		registerBlock(fission_shield, new ItemBlockMeta(fission_shield, MetaEnums.NeutronShieldType.class, new TextFormatting[] {TextFormatting.YELLOW, TextFormatting.LIGHT_PURPLE}, NCInfo.neutronShieldFixedInfo(), TextFormatting.AQUA, NCInfo.neutronShieldInfo()));
 		registerBlock(fission_computer_port);
+		
+		registerBlock(fission_irradiator_port);
+		
+		registerBlock(fission_cell_port);
+		
+		registerBlock(fission_vessel_port);
+		registerBlock(fission_heater_port, new ItemBlockMeta(fission_heater_port, MetaEnums.CoolantHeaterType.class, TextFormatting.AQUA));
+		registerBlock(fission_heater_port2, new ItemBlockMeta(fission_heater_port2, MetaEnums.CoolantHeaterType2.class, TextFormatting.AQUA));
+		
+		registerBlock(fission_shield_manager);
 		
 		registerBlock(solid_fission_controller);
 		registerBlock(solid_fission_cell);
@@ -407,7 +495,8 @@ public class NCBlocks {
 		
 		registerBlock(salt_fission_controller);
 		registerBlock(salt_fission_vessel);
-		registerBlock(salt_fission_heater);
+		registerBlock(salt_fission_heater, new ItemBlockMeta(salt_fission_heater, MetaEnums.CoolantHeaterType.class, TextFormatting.BLUE, NCInfo.coolantHeaterFixedInfo(), TextFormatting.AQUA, NCInfo.coolantHeaterInfo()));
+		registerBlock(salt_fission_heater2, new ItemBlockMeta(salt_fission_heater2, MetaEnums.CoolantHeaterType2.class, TextFormatting.BLUE, NCInfo.coolantHeaterFixedInfo2(), TextFormatting.AQUA, NCInfo.coolantHeaterInfo2()));
 		
 		registerBlock(heat_exchanger_controller);
 		registerBlock(heat_exchanger_casing);
@@ -433,29 +522,31 @@ public class NCBlocks {
 		registerBlock(turbine_rotor_stator, TextFormatting.GRAY, new String[] {Lang.localise(fixedLine("turbine_rotor_stator_expansion"), Math.round(100D*NCConfig.turbine_stator_expansion) + "%")}, TextFormatting.AQUA, InfoHelper.formattedInfo(infoLine("turbine_rotor_stator")));
 		registerBlock(turbine_rotor_bearing);
 		registerBlock(turbine_dynamo_coil, new ItemBlockMeta(turbine_dynamo_coil, TurbineDynamoCoilType.class, TextFormatting.LIGHT_PURPLE, NCInfo.dynamoCoilFixedInfo(), TextFormatting.AQUA, NCInfo.dynamoCoilInfo()));
+		registerBlock(turbine_coil_connector);
 		registerBlock(turbine_inlet);
 		registerBlock(turbine_outlet);
 		registerBlock(turbine_computer_port);
 		
 		if (NCConfig.register_passive[0]) {
-			registerBlock(cobblestone_generator, NCConfig.cobble_gen_power > 0 ? InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_req_power", UnitHelper.ratePrefix(NCConfig.processor_passive_rate[0], 5, Lang.localise("nuclearcraft.cobblestone")), UnitHelper.ratePrefix(NCConfig.cobble_gen_power, 5, "RF")) : InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_no_req_power", UnitHelper.ratePrefix(NCConfig.processor_passive_rate[0], 5, Lang.localise("nuclearcraft.cobblestone"))));
-			registerBlock(cobblestone_generator_compact, NCConfig.cobble_gen_power > 0 ? InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_req_power", UnitHelper.ratePrefix(NCConfig.processor_passive_rate[0]*8, 5, Lang.localise("nuclearcraft.cobblestone")), UnitHelper.ratePrefix(NCConfig.cobble_gen_power*8, 5, "RF")) : InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_no_req_power", UnitHelper.ratePrefix(NCConfig.processor_passive_rate[0]*8, 5, Lang.localise("nuclearcraft.cobblestone"))));
-			registerBlock(cobblestone_generator_dense, NCConfig.cobble_gen_power > 0 ? InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_req_power", UnitHelper.ratePrefix(NCConfig.processor_passive_rate[0]*64, 5, Lang.localise("nuclearcraft.cobblestone")), UnitHelper.ratePrefix(NCConfig.cobble_gen_power*64, 5, "RF")) : InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_no_req_power", UnitHelper.ratePrefix(NCConfig.processor_passive_rate[0]*64, 5, Lang.localise("nuclearcraft.cobblestone"))));
+			String cobblePerTick = " " + Lang.localise("nuclearcraft.cobblestone") + "/t";
+			registerBlock(cobblestone_generator, NCConfig.cobble_gen_power > 0 ? InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_req_power", NCMath.sigFigs(NCConfig.processor_passive_rate[0], 5) + cobblePerTick, UnitHelper.prefix(NCConfig.cobble_gen_power, 5, "RF/t")) : InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_no_req_power", NCMath.sigFigs(NCConfig.processor_passive_rate[0], 5) + cobblePerTick));
+			registerBlock(cobblestone_generator_compact, NCConfig.cobble_gen_power > 0 ? InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_req_power", NCMath.sigFigs(NCConfig.processor_passive_rate[0]*8, 5) + cobblePerTick, UnitHelper.prefix(NCConfig.cobble_gen_power*8, 5, "RF/t")) : InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_no_req_power", NCMath.sigFigs(NCConfig.processor_passive_rate[0]*8, 5) + cobblePerTick));
+			registerBlock(cobblestone_generator_dense, NCConfig.cobble_gen_power > 0 ? InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_req_power", NCMath.sigFigs(NCConfig.processor_passive_rate[0]*64, 5) + cobblePerTick, UnitHelper.prefix(NCConfig.cobble_gen_power*64, 5, "RF/t")) : InfoHelper.formattedInfo("tile.nuclearcraft.cobblestone_generator_no_req_power", NCMath.sigFigs(NCConfig.processor_passive_rate[0]*64, 5) + cobblePerTick));
 		}
 		
 		if (NCConfig.register_passive[1]) {
-			registerBlock(water_source, InfoHelper.formattedInfo(infoLine("water_source"), UnitHelper.ratePrefix(NCConfig.processor_passive_rate[1], 5, "B", -1)));
-			registerBlock(water_source_compact, InfoHelper.formattedInfo(infoLine("water_source"), UnitHelper.ratePrefix(NCConfig.processor_passive_rate[1]*8, 5, "B", -1)));
-			registerBlock(water_source_dense, InfoHelper.formattedInfo(infoLine("water_source"), UnitHelper.ratePrefix(NCConfig.processor_passive_rate[1]*64, 5, "B", -1)));
+			registerBlock(water_source, InfoHelper.formattedInfo(infoLine("water_source"), UnitHelper.prefix(NCConfig.processor_passive_rate[1], 5, "B/t", -1)));
+			registerBlock(water_source_compact, InfoHelper.formattedInfo(infoLine("water_source"), UnitHelper.prefix(NCConfig.processor_passive_rate[1]*8, 5, "B/t", -1)));
+			registerBlock(water_source_dense, InfoHelper.formattedInfo(infoLine("water_source"), UnitHelper.prefix(NCConfig.processor_passive_rate[1]*64, 5, "B/t", -1)));
 		}
 		
 		if (NCConfig.register_passive[2]) {
-			registerBlock(nitrogen_collector, InfoHelper.formattedInfo(infoLine("nitrogen_collector"), UnitHelper.ratePrefix(NCConfig.processor_passive_rate[2], 5, "B", -1)));
-			registerBlock(nitrogen_collector_compact, InfoHelper.formattedInfo(infoLine("nitrogen_collector"), UnitHelper.ratePrefix(NCConfig.processor_passive_rate[2]*8, 5, "B", -1)));
-			registerBlock(nitrogen_collector_dense, InfoHelper.formattedInfo(infoLine("nitrogen_collector"), UnitHelper.ratePrefix(NCConfig.processor_passive_rate[2]*64, 5, "B", -1)));
+			registerBlock(nitrogen_collector, InfoHelper.formattedInfo(infoLine("nitrogen_collector"), UnitHelper.prefix(NCConfig.processor_passive_rate[2], 5, "B/t", -1)));
+			registerBlock(nitrogen_collector_compact, InfoHelper.formattedInfo(infoLine("nitrogen_collector"), UnitHelper.prefix(NCConfig.processor_passive_rate[2]*8, 5, "B/t", -1)));
+			registerBlock(nitrogen_collector_dense, InfoHelper.formattedInfo(infoLine("nitrogen_collector"), UnitHelper.prefix(NCConfig.processor_passive_rate[2]*64, 5, "B/t", -1)));
 		}
 		
-		registerBlock(radiation_scrubber, NCConfig.radiation_scrubber_non_linear ? InfoHelper.formattedInfo(infoLine("radiation_scrubber_alt"), NCMath.decimalPlaces(100D*RadiationHelper.getAltScrubbingFraction(1D), 1) + "%", NCConfig.radiation_scrubber_borax_rate > 0 ? Lang.localise("info.nuclearcraft.radiation_scrubber_req_borax", NCConfig.radiation_scrubber_power/20, NCConfig.radiation_scrubber_borax_rate) : Lang.localise("info.nuclearcraft.radiation_scrubber_no_req_borax", NCConfig.radiation_scrubber_power/20)) : InfoHelper.formattedInfo(infoLine("radiation_scrubber"), NCMath.decimalPlaces(100D*NCConfig.radiation_scrubber_fraction, 1) + "%", NCConfig.radiation_scrubber_borax_rate > 0 ? Lang.localise("info.nuclearcraft.radiation_scrubber_req_borax", NCConfig.radiation_scrubber_power/20, NCConfig.radiation_scrubber_borax_rate) : Lang.localise("info.nuclearcraft.radiation_scrubber_no_req_borax", NCConfig.radiation_scrubber_power/20)));
+		registerBlock(radiation_scrubber, NCConfig.radiation_scrubber_non_linear ? InfoHelper.formattedInfo(infoLine("radiation_scrubber_non_linear"), NCMath.decimalPlaces(100D*RadiationHelper.getAltScrubbingFraction(1D), 1) + "%", Lang.localise("nuclearcraft.one_hundred_percent")) : InfoHelper.formattedInfo(infoLine("radiation_scrubber"), NCMath.decimalPlaces(100D*NCConfig.radiation_scrubber_fraction, 1) + "%", Lang.localise("nuclearcraft.one_hundred_percent")));
 		
 		registerBlock(geiger_block);
 		
@@ -464,7 +555,17 @@ public class NCBlocks {
 		
 		registerBlock(tritium_lamp);
 		
-		//registerBlock(spin);
+		if (NCConfig.register_quantum) {
+			registerBlock(quantum_computer_controller);
+			registerBlock(quantum_computer_qubit);
+			
+			registerBlock(quantum_computer_gate_single, new ItemBlockMeta(quantum_computer_gate_single, QuantumComputerGateEnums.SingleType.class, TextFormatting.AQUA));
+			registerBlock(quantum_computer_gate_control, new ItemBlockMeta(quantum_computer_gate_control, QuantumComputerGateEnums.ControlType.class, TextFormatting.AQUA));
+			registerBlock(quantum_computer_gate_swap, new ItemBlockMeta(quantum_computer_gate_swap, QuantumComputerGateEnums.SwapType.class, TextFormatting.AQUA));
+			
+			registerBlock(quantum_computer_connector);
+			//registerBlock(quantum_computer_port);
+		}
 	}
 	
 	public static void registerRenders() {
@@ -485,7 +586,7 @@ public class NCBlocks {
 		
 		if (NCConfig.register_processor[0]) registerRender(nuclear_furnace);
 		if (NCConfig.register_processor[1]) registerRender(manufactory);
-		if (NCConfig.register_processor[2]) registerRender(isotope_separator);
+		if (NCConfig.register_processor[2]) registerRender(separator);
 		if (NCConfig.register_processor[3]) registerRender(decay_hastener);
 		if (NCConfig.register_processor[4]) registerRender(fuel_reprocessor);
 		if (NCConfig.register_processor[5]) registerRender(alloy_furnace);
@@ -493,7 +594,7 @@ public class NCBlocks {
 		if (NCConfig.register_processor[7]) registerRender(melter);
 		if (NCConfig.register_processor[8]) registerRender(supercooler);
 		if (NCConfig.register_processor[9]) registerRender(electrolyzer);
-		if (NCConfig.register_processor[10]) registerRender(irradiator);
+		if (NCConfig.register_processor[10]) registerRender(assembler);
 		if (NCConfig.register_processor[11]) registerRender(ingot_former);
 		if (NCConfig.register_processor[12]) registerRender(pressurizer);
 		if (NCConfig.register_processor[13]) registerRender(chemical_reactor);
@@ -518,28 +619,53 @@ public class NCBlocks {
 		
 		registerRender(decay_generator);
 		
-		registerRender(voltaic_pile_basic);
-		registerRender(voltaic_pile_advanced);
-		registerRender(voltaic_pile_du);
-		registerRender(voltaic_pile_elite);
+		if (NCConfig.register_battery[0]) {
+			registerRender(voltaic_pile_basic);
+			registerRender(voltaic_pile_advanced);
+			registerRender(voltaic_pile_du);
+			registerRender(voltaic_pile_elite);
+		}
 		
-		registerRender(lithium_ion_battery_basic);
-		registerRender(lithium_ion_battery_advanced);
-		registerRender(lithium_ion_battery_du);
-		registerRender(lithium_ion_battery_elite);
+		if (NCConfig.register_battery[1]) {
+			registerRender(lithium_ion_battery_basic);
+			registerRender(lithium_ion_battery_advanced);
+			registerRender(lithium_ion_battery_du);
+			registerRender(lithium_ion_battery_elite);
+		}
 		
 		registerRender(bin);
 		
 		registerRender(fission_casing);
 		registerRender(fission_glass);
 		registerRender(fission_conductor);
-		registerRender(fission_reflector);
-		registerRender(fission_port);
+		registerRender(fission_monitor);
+		for (int i = 0; i < MetaEnums.NeutronReflectorType.values().length; i++) {
+			registerRender(fission_reflector, i, MetaEnums.NeutronReflectorType.values()[i].getName());
+		}
+		registerRender(fission_power_port);
 		registerRender(fission_vent);
+		registerRender(fission_irradiator);
 		for (int i = 0; i < MetaEnums.NeutronSourceType.values().length; i++) {
 			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(fission_source), i, new ModelResourceLocation(new ResourceLocation(Global.MOD_ID, fission_source.getRegistryName().getPath()), "active=false,facing=south,type=" + MetaEnums.NeutronSourceType.values()[i].getName()));
 		}
+		for (int i = 0; i < MetaEnums.NeutronShieldType.values().length; i++) {
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(fission_shield), i, new ModelResourceLocation(new ResourceLocation(Global.MOD_ID, fission_shield.getRegistryName().getPath()), "active=true,type=" + MetaEnums.NeutronShieldType.values()[i].getName()));
+		}
 		registerRender(fission_computer_port);
+		
+		registerRender(fission_irradiator_port);
+		
+		registerRender(fission_cell_port);
+		
+		registerRender(fission_vessel_port);
+		for (int i = 0; i < MetaEnums.CoolantHeaterType.values().length; i++) {
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(fission_heater_port), i, new ModelResourceLocation(new ResourceLocation(Global.MOD_ID, fission_heater_port.getRegistryName().getPath()), "axis=z,type=" + MetaEnums.CoolantHeaterType.values()[i].getName()));
+		}
+		for (int i = 0; i < MetaEnums.CoolantHeaterType2.values().length; i++) {
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(fission_heater_port2), i, new ModelResourceLocation(new ResourceLocation(Global.MOD_ID, fission_heater_port2.getRegistryName().getPath()), "axis=z,type=" + MetaEnums.CoolantHeaterType2.values()[i].getName()));
+		}
+		
+		registerRender(fission_shield_manager);
 		
 		registerRender(solid_fission_controller);
 		registerRender(solid_fission_cell);
@@ -552,7 +678,12 @@ public class NCBlocks {
 		
 		registerRender(salt_fission_controller);
 		registerRender(salt_fission_vessel);
-		registerRender(salt_fission_heater);
+		for (int i = 0; i < MetaEnums.CoolantHeaterType.values().length; i++) {
+			registerRender(salt_fission_heater, i, MetaEnums.CoolantHeaterType.values()[i].getName());
+		}
+		for (int i = 0; i < MetaEnums.CoolantHeaterType2.values().length; i++) {
+			registerRender(salt_fission_heater2, i, MetaEnums.CoolantHeaterType2.values()[i].getName());
+		}
 		
 		registerRender(heat_exchanger_controller);
 		registerRender(heat_exchanger_casing);
@@ -580,6 +711,7 @@ public class NCBlocks {
 		for (int i = 0; i < TurbineDynamoCoilType.values().length; i++) {
 			registerRender(turbine_dynamo_coil, i, TurbineDynamoCoilType.values()[i].getName());
 		}
+		registerRender(turbine_coil_connector);
 		registerRender(turbine_inlet);
 		registerRender(turbine_outlet);
 		registerRender(turbine_computer_port);
@@ -611,7 +743,23 @@ public class NCBlocks {
 		
 		registerRender(tritium_lamp);
 		
-		//registerRender(spin);
+		if (NCConfig.register_quantum) {
+			registerRender(quantum_computer_controller);
+			registerRender(quantum_computer_qubit);
+			
+			for (int i = 0; i < QuantumComputerGateEnums.SingleType.values().length; i++) {
+				registerRender(quantum_computer_gate_single, i, QuantumComputerGateEnums.SingleType.values()[i].getName());
+			}
+			for (int i = 0; i < QuantumComputerGateEnums.ControlType.values().length; i++) {
+				registerRender(quantum_computer_gate_control, i, QuantumComputerGateEnums.ControlType.values()[i].getName());
+			}
+			for (int i = 0; i < QuantumComputerGateEnums.SwapType.values().length; i++) {
+				registerRender(quantum_computer_gate_swap, i, QuantumComputerGateEnums.SwapType.values()[i].getName());
+			}
+			
+			registerRender(quantum_computer_connector);
+			//registerRender(quantum_computer_port);
+		}
 	}
 	
 	public static Block withName(Block block, String name) {

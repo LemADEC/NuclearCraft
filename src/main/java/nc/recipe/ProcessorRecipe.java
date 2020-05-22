@@ -2,64 +2,63 @@ package nc.recipe;
 
 import java.util.List;
 
-import nc.config.NCConfig;
+import crafttweaker.annotations.ZenRegister;
 import nc.recipe.ingredient.IFluidIngredient;
 import nc.recipe.ingredient.IItemIngredient;
-import nc.tile.generator.TileDecayGenerator;
 import nc.tile.internal.fluid.Tank;
 import nc.util.InfoHelper;
 import nc.util.Lang;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumParticleTypes;
+import stanhebben.zenscript.annotations.ZenClass;
 
+@ZenClass("mods.nuclearcraft.ProcessorRecipe")
+@ZenRegister
 public class ProcessorRecipe implements IRecipe {
 	
 	protected List<IItemIngredient> itemIngredients, itemProducts;
 	protected List<IFluidIngredient> fluidIngredients, fluidProducts;
 	
-	//private int itemInputSize, fluidInputSize, itemOutputSize, fluidOutputSize;
-	
 	protected List extras;
-	public boolean isShapeless;
+	protected boolean isShapeless;
 	
-	public ProcessorRecipe(List<IItemIngredient> itemIngredientsList, List<IFluidIngredient> fluidIngredientsList, List<IItemIngredient> itemProductsList, List<IFluidIngredient> fluidProductsList, List extrasList, boolean shapeless) {
-		itemIngredients = itemIngredientsList;
-		fluidIngredients = fluidIngredientsList;
-		itemProducts = itemProductsList;
-		fluidProducts = fluidProductsList;
+	public ProcessorRecipe(List<IItemIngredient> itemIngredients, List<IFluidIngredient> fluidIngredients, List<IItemIngredient> itemProducts, List<IFluidIngredient> fluidProducts, List extras, boolean shapeless) {
+		this.itemIngredients = itemIngredients;
+		this.fluidIngredients = fluidIngredients;
+		this.itemProducts = itemProducts;
+		this.fluidProducts = fluidProducts;
 		
-		/*itemInputSize = itemIngredientsList.size();
-		fluidInputSize = fluidIngredientsList.size();
-		itemOutputSize = itemProductsList.size();
-		fluidOutputSize = fluidProductsList.size();*/
-		
-		extras = extrasList;
+		this.extras = extras;
 		isShapeless = shapeless;
 	}
 	
 	@Override
-	public List<IItemIngredient> itemIngredients() {
+	public List<IItemIngredient> getItemIngredients() {
 		return itemIngredients;
 	}
 	
 	@Override
-	public List<IFluidIngredient> fluidIngredients() {
+	public List<IFluidIngredient> getFluidIngredients() {
 		return fluidIngredients;
 	}
 	
 	@Override
-	public List<IItemIngredient> itemProducts() {
+	public List<IItemIngredient> getItemProducts() {
 		return itemProducts;
 	}
 	
 	@Override
-	public List<IFluidIngredient> fluidProducts() {
+	public List<IFluidIngredient> getFluidProducts() {
 		return fluidProducts;
 	}
 	
 	@Override
-	public List extras() {
+	public List getExtras() {
 		return extras;
+	}
+	
+	public boolean isShapeless() {
+		return isShapeless;
 	}
 
 	@Override
@@ -87,169 +86,151 @@ public class ProcessorRecipe implements IRecipe {
 	// Processors
 	
 	public double getBaseProcessTime(double defaultProcessTime) {
-		if (extras.isEmpty()) return defaultProcessTime;
-		else if (extras.get(0) instanceof Double) return ((double) extras.get(0))*defaultProcessTime;
-		else return defaultProcessTime;
+		return ((double) extras.get(0))*defaultProcessTime;
 	}
 	
 	public double getBaseProcessPower(double defaultProcessPower) {
-		if (extras.size() < 2) return defaultProcessPower;
-		else if (extras.get(1) instanceof Double) return ((double) extras.get(1))*defaultProcessPower;
-		else return defaultProcessPower;
+		return ((double) extras.get(1))*defaultProcessPower;
 	}
 	
 	public double getBaseProcessRadiation() {
-		if (extras.size() < 3) return 0D;
-		else if (extras.get(2) instanceof Double) return (double) extras.get(2);
-		else return 0D;
+		return (double) extras.get(2);
+	}
+	
+	// Passive Collector
+	
+	public String getCollectorProductionRate() {
+		return (String) extras.get(0);
 	}
 	
 	// Decay Generator
 	
 	public double getDecayLifetime() {
-		if (extras.isEmpty()) return TileDecayGenerator.DEFAULT_LIFETIME;
-		else if (extras.get(0) instanceof Double) return ((double) extras.get(0))*20D/NCConfig.machine_update_rate;
-		return TileDecayGenerator.DEFAULT_LIFETIME;
+		return (double) extras.get(0);
 	}
 	
-	public int getDecayPower() {
-		if (extras.size() < 2) return 0;
-		if (extras.get(1) instanceof Integer) return (int) (((Integer)extras.get(1)).intValue()*NCConfig.machine_update_rate/20D);
-		return 0;
+	public double getDecayPower() {
+		return (double) extras.get(1);
 	}
 	
 	public double getDecayRadiation() {
-		if (extras.size() < 3) return 0D;
-		else if (extras.get(2) instanceof Double) return ((double) extras.get(2))*NCConfig.machine_update_rate/20D;
-		else return 0D;
+		return (double) extras.get(2);
 	}
 	
 	// Fission Moderator
 	
 	public int getFissionModeratorFluxFactor() {
-		if (extras.isEmpty()) return 0;
-		else if (extras.get(0) instanceof Integer) return (int) extras.get(0);
-		else return 0;
+		return (int) extras.get(0);
 	}
 	
 	public double getFissionModeratorEfficiency() {
-		if (extras.size() < 2) return 1D;
-		else if (extras.get(1) instanceof Double) return (double) extras.get(1);
-		else return 1D;
+		return (double) extras.get(1);
 	}
 	
 	// Fission Reflector
 	
 	public double getFissionReflectorEfficiency() {
-		if (extras.isEmpty()) return 0D;
-		else if (extras.get(0) instanceof Double) return (double) extras.get(0);
-		else return 0D;
+		return (double) extras.get(0);
 	}
 	
 	public double getFissionReflectorReflectivity() {
-		if (extras.size() < 2) return 0D;
-		else if (extras.get(1) instanceof Double) return (double) extras.get(1);
-		else return 0D;
+		return (double) extras.get(1);
 	}
 	
-	// Solid Fission
+	// Fission Irradiator
+	
+	public int getIrradiatorFluxRequired() {
+		return (int) extras.get(0);
+	}
+	
+	public double getIrradiatorHeatPerFlux() {
+		return (double) extras.get(1);
+	}
+	
+	public double getIrradiatorProcessEfficiency() {
+		return (double) extras.get(2);
+	}
+	
+	public double getIrradiatorBaseProcessRadiation() {
+		return (double) extras.get(3);
+	}
+	
+	// Fission
 	
 	public int getFissionFuelTime() {
-		if (extras.isEmpty()) return 1;
-		else if (extras.get(0) instanceof Integer) return (int) extras.get(0);
-		else return 1;
+		return (int) extras.get(0);
+	}
+	
+	public double getSaltFissionFuelTime() {
+		return (double) extras.get(0);
 	}
 	
 	public int getFissionFuelHeat() {
-		if (extras.size() < 2) return 0;
-		else if (extras.get(1) instanceof Integer) return (int) extras.get(1);
-		else return 0;
+		return (int) extras.get(1);
 	}
 	
 	public double getFissionFuelEfficiency() {
-		if (extras.size() < 3) return 0D;
-		else if (extras.get(2) instanceof Double) return (double) extras.get(2);
-		else return 0D;
+		return (double) extras.get(2);
 	}
 	
 	public int getFissionFuelCriticality() {
-		if (extras.size() < 4) return 1;
-		else if (extras.get(3) instanceof Integer) return (int) extras.get(3);
-		else return 1;
+		return (int) extras.get(3);
+	}
+	
+	public boolean getFissionFuelSelfPriming() {
+		return (boolean) extras.get(4);
 	}
 	
 	public double getFissionFuelRadiation() {
-		if (extras.size() < 5) return 0D;
-		else if (extras.get(4) instanceof Double) return (double) extras.get(4);
-		else return 0D;
+		return (double) extras.get(5);
 	}
 	
 	// Fission Heating
 	
 	public int getFissionHeatingHeatPerInputMB() {
-		if (extras.isEmpty()) return 128;
-		else if (extras.get(0) instanceof Integer) return (int) extras.get(0);
-		else return 128;
+		return (int) extras.get(0);
 	}
 	
 	// Fusion
 	
 	public double getFusionComboTime() {
-		if (extras.isEmpty()) return 1D;
-		else if (extras.get(0) instanceof Double) return (double) extras.get(0);
-		else return 1D;
+		return (double) extras.get(0);
 	}
 	
 	public double getFusionComboPower() {
-		if (extras.size() < 2) return 0D;
-		else if (extras.get(1) instanceof Double) return (double) extras.get(1);
-		else return 0D;
+		return (double) extras.get(1);
 	}
 	
 	public double getFusionComboHeatVariable() {
-		if (extras.size() < 3) return 1000D;
-		else if (extras.get(2) instanceof Double) return (double) extras.get(2);
-		else return 1000D;
+		return (double) extras.get(2);
 	}
 	
 	public double getFusionComboRadiation() {
-		if (extras.size() < 4) return 0D;
-		else if (extras.get(3) instanceof Double) return (double) extras.get(3);
-		else return 0D;
+		return (double) extras.get(3);
 	}
 	
 	// Coolant Heater
 	
-	public double getCoolantHeaterCoolingRate() {
-		if (extras.isEmpty()) return 10D;
-		else if (extras.get(0) instanceof Double) return (double) extras.get(0);
-		else return 10D;
+	public int getCoolantHeaterCoolingRate() {
+		return (int) extras.get(0);
 	}
 	
 	public String[] getCoolantHeaterJEIInfo() {
-		if (extras.size() < 2) return null;
-		else if (extras.get(1) instanceof String) return InfoHelper.formattedInfo(Lang.localise((String) extras.get(1)));
-		else return null;
+		return InfoHelper.formattedInfo(Lang.localise((String) extras.get(1)));
 	}
 	
 	// Heat Exchanger
 	
-	public double getHeatExchangerProcessTime(double defaultProcessTime) {
-		if (extras.isEmpty()) return defaultProcessTime;
-		else if (extras.get(0) instanceof Double) return (double) extras.get(0);
-		else return defaultProcessTime;
+	public double getHeatExchangerProcessTime() {
+		return (double) extras.get(0);
 	}
 	
 	public int getHeatExchangerInputTemperature() {
-		if (extras.size() < 2) return 0;
-		else if (extras.get(1) instanceof Integer) return (int) extras.get(1);
-		else return 0;
+		return (int) extras.get(1);
 	}
 	
 	public int getHeatExchangerOutputTemperature() {
-		if (extras.size() < 3) return 0;
-		else if (extras.get(2) instanceof Integer) return (int) extras.get(2);
-		else return 0;
+		return (int) extras.get(2);
 	}
 	
 	public boolean getHeatExchangerIsHeating() {
@@ -259,51 +240,49 @@ public class ProcessorRecipe implements IRecipe {
 	// Turbine
 	
 	public double getTurbinePowerPerMB() {
-		if (extras.isEmpty()) return 0D;
-		else if (extras.get(0) instanceof Double) return (double) extras.get(0);
-		else return 0D;
+		return (double) extras.get(0);
 	}
 	
 	public double getTurbineExpansionLevel() {
-		if (extras.size() < 2) return 1D;
-		else if (extras.get(1) instanceof Double) return (double) extras.get(1);
-		else return 1D;
+		return (double) extras.get(1);
 	}
 	
 	public String getTurbineParticleEffect() {
-		if (extras.size() < 3) return "cloud";
-		else if (extras.get(2) instanceof String) {
-			EnumParticleTypes particle = EnumParticleTypes.getByName((String)extras.get(2));
-			return particle == null ? "cloud" : (String)extras.get(2);
-		}
-		else return "cloud";
+		EnumParticleTypes particle = EnumParticleTypes.getByName((String)extras.get(2));
+		return particle == null ? "cloud" : (String)extras.get(2);
 	}
 	
 	public double getTurbineParticleSpeedMultiplier() {
-		if (extras.size() < 4) return 1D/23.2D;
-		else if (extras.get(3) instanceof Double) return (double) extras.get(3);
-		else return 1D/23.2D;
+		return (double) extras.get(3);
 	}
 	
 	// Condenser
 	
-	public double getCondenserProcessTime(double defaultProcessTime) {
-		if (extras.isEmpty()) return defaultProcessTime;
-		else if (extras.get(0) instanceof Double) return (double) extras.get(0);
-		else return defaultProcessTime;
+	public double getCondenserProcessTime() {
+		return (double) extras.get(0);
 	}
 	
 	public int getCondenserCondensingTemperature() {
-		if (extras.size() < 2) return 300;
-		else if (extras.get(1) instanceof Integer) return (int) extras.get(1);
-		else return 300;
+		return (int) extras.get(1);
+	}
+	
+	// Radiation Scrubber
+	
+	public int getScrubberProcessTime() {
+		return (int) extras.get(0);
+	}
+	
+	public int getScrubberProcessPower() {
+		return (int) extras.get(1);
+	}
+	
+	public double getScrubberProcessEfficiency() {
+		return (double) extras.get(2);
 	}
 	
 	// Radiation Block Mutations
 	
-	public double getBlockMutationThreshold(boolean purification) {
-		if (extras.isEmpty()) return purification ? 0D : Double.MAX_VALUE;
-		else if (extras.get(0) instanceof Double) return (double) extras.get(0);
-		else return purification ? 0D : Double.MAX_VALUE;
+	public double getBlockMutationThreshold() {
+		return (double) extras.get(0);
 	}
 }

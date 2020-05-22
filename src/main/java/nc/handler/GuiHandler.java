@@ -1,18 +1,17 @@
 package nc.handler;
 
 import nc.container.processor.ContainerAlloyFurnace;
+import nc.container.processor.ContainerAssembler;
 import nc.container.processor.ContainerCentrifuge;
 import nc.container.processor.ContainerChemicalReactor;
 import nc.container.processor.ContainerCrystallizer;
 import nc.container.processor.ContainerDecayHastener;
-import nc.container.processor.ContainerEnricher;
 import nc.container.processor.ContainerElectrolyzer;
+import nc.container.processor.ContainerEnricher;
 import nc.container.processor.ContainerExtractor;
 import nc.container.processor.ContainerFuelReprocessor;
 import nc.container.processor.ContainerInfuser;
 import nc.container.processor.ContainerIngotFormer;
-import nc.container.processor.ContainerIrradiator;
-import nc.container.processor.ContainerIsotopeSeparator;
 import nc.container.processor.ContainerMachineConfig;
 import nc.container.processor.ContainerManufactory;
 import nc.container.processor.ContainerMelter;
@@ -20,58 +19,83 @@ import nc.container.processor.ContainerNuclearFurnace;
 import nc.container.processor.ContainerPressurizer;
 import nc.container.processor.ContainerRockCrusher;
 import nc.container.processor.ContainerSaltMixer;
+import nc.container.processor.ContainerSeparator;
 import nc.container.processor.ContainerSupercooler;
 import nc.gui.processor.GuiAlloyFurnace;
+import nc.gui.processor.GuiAssembler;
 import nc.gui.processor.GuiCentrifuge;
 import nc.gui.processor.GuiChemicalReactor;
 import nc.gui.processor.GuiCrystallizer;
 import nc.gui.processor.GuiDecayHastener;
-import nc.gui.processor.GuiEnricher;
 import nc.gui.processor.GuiElectrolyzer;
+import nc.gui.processor.GuiEnricher;
 import nc.gui.processor.GuiExtractor;
 import nc.gui.processor.GuiFuelReprocessor;
 import nc.gui.processor.GuiInfuser;
 import nc.gui.processor.GuiIngotFormer;
-import nc.gui.processor.GuiIrradiator;
-import nc.gui.processor.GuiIsotopeSeparator;
 import nc.gui.processor.GuiManufactory;
 import nc.gui.processor.GuiMelter;
 import nc.gui.processor.GuiNuclearFurnace;
 import nc.gui.processor.GuiPressurizer;
 import nc.gui.processor.GuiRockCrusher;
 import nc.gui.processor.GuiSaltMixer;
+import nc.gui.processor.GuiSeparator;
 import nc.gui.processor.GuiSupercooler;
+import nc.multiblock.container.ContainerFissionCellPort;
+import nc.multiblock.container.ContainerFissionHeaterPort;
+import nc.multiblock.container.ContainerFissionIrradiator;
+import nc.multiblock.container.ContainerFissionIrradiatorPort;
+import nc.multiblock.container.ContainerFissionVesselPort;
 import nc.multiblock.container.ContainerHeatExchangerController;
 import nc.multiblock.container.ContainerSaltFissionController;
+import nc.multiblock.container.ContainerSaltFissionHeater;
+import nc.multiblock.container.ContainerSaltFissionVessel;
+import nc.multiblock.container.ContainerSolidFissionCell;
 import nc.multiblock.container.ContainerSolidFissionController;
 import nc.multiblock.container.ContainerTurbineController;
 import nc.multiblock.fission.salt.tile.TileSaltFissionController;
+import nc.multiblock.fission.salt.tile.TileSaltFissionHeater;
+import nc.multiblock.fission.salt.tile.TileSaltFissionVessel;
+import nc.multiblock.fission.solid.tile.TileSolidFissionCell;
 import nc.multiblock.fission.solid.tile.TileSolidFissionController;
+import nc.multiblock.fission.tile.TileFissionIrradiator;
+import nc.multiblock.fission.tile.port.TileFissionCellPort;
+import nc.multiblock.fission.tile.port.TileFissionHeaterPort;
+import nc.multiblock.fission.tile.port.TileFissionIrradiatorPort;
+import nc.multiblock.fission.tile.port.TileFissionVesselPort;
+import nc.multiblock.gui.GuiFissionCellPort;
+import nc.multiblock.gui.GuiFissionHeaterPort;
+import nc.multiblock.gui.GuiFissionIrradiator;
+import nc.multiblock.gui.GuiFissionIrradiatorPort;
+import nc.multiblock.gui.GuiFissionVesselPort;
 import nc.multiblock.gui.GuiHeatExchangerController;
 import nc.multiblock.gui.GuiSaltFissionController;
+import nc.multiblock.gui.GuiSaltFissionHeater;
+import nc.multiblock.gui.GuiSaltFissionVessel;
+import nc.multiblock.gui.GuiSolidFissionCell;
 import nc.multiblock.gui.GuiSolidFissionController;
 import nc.multiblock.gui.GuiTurbineController;
 import nc.multiblock.heatExchanger.tile.TileHeatExchangerController;
 import nc.multiblock.turbine.tile.TileTurbineController;
 import nc.tile.processor.TileNuclearFurnace;
 import nc.tile.processor.TileProcessor.AlloyFurnace;
+import nc.tile.processor.TileProcessor.Assembler;
 import nc.tile.processor.TileProcessor.Centrifuge;
 import nc.tile.processor.TileProcessor.ChemicalReactor;
 import nc.tile.processor.TileProcessor.Crystallizer;
 import nc.tile.processor.TileProcessor.DecayHastener;
-import nc.tile.processor.TileProcessor.Enricher;
 import nc.tile.processor.TileProcessor.Electrolyzer;
+import nc.tile.processor.TileProcessor.Enricher;
 import nc.tile.processor.TileProcessor.Extractor;
 import nc.tile.processor.TileProcessor.FuelReprocessor;
 import nc.tile.processor.TileProcessor.Infuser;
 import nc.tile.processor.TileProcessor.IngotFormer;
-import nc.tile.processor.TileProcessor.Irradiator;
-import nc.tile.processor.TileProcessor.IsotopeSeparator;
 import nc.tile.processor.TileProcessor.Manufactory;
 import nc.tile.processor.TileProcessor.Melter;
 import nc.tile.processor.TileProcessor.Pressurizer;
 import nc.tile.processor.TileProcessor.RockCrusher;
 import nc.tile.processor.TileProcessor.SaltMixer;
+import nc.tile.processor.TileProcessor.Separator;
 import nc.tile.processor.TileProcessor.Supercooler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -91,7 +115,7 @@ public class GuiHandler implements IGuiHandler {
 			case 1:
 				if (tile instanceof Manufactory) return new ContainerManufactory(player, (Manufactory) tile);
 			case 2:
-				if (tile instanceof IsotopeSeparator) return new ContainerIsotopeSeparator(player, (IsotopeSeparator) tile);
+				if (tile instanceof Separator) return new ContainerSeparator(player, (Separator) tile);
 			case 3:
 				if (tile instanceof DecayHastener) return new ContainerDecayHastener(player, (DecayHastener) tile);
 			case 4:
@@ -107,7 +131,7 @@ public class GuiHandler implements IGuiHandler {
 			case 9:
 				if (tile instanceof Electrolyzer) return new ContainerElectrolyzer(player, (Electrolyzer) tile);
 			case 10:
-				if (tile instanceof Irradiator) return new ContainerIrradiator(player, (Irradiator) tile);
+				if (tile instanceof Assembler) return new ContainerAssembler(player, (Assembler) tile);
 			case 11:
 				if (tile instanceof IngotFormer) return new ContainerIngotFormer(player, (IngotFormer) tile);
 			case 12:
@@ -136,10 +160,26 @@ public class GuiHandler implements IGuiHandler {
 				if (tile instanceof TileHeatExchangerController) return new ContainerHeatExchangerController(player, (TileHeatExchangerController) tile);
 			case 104:
 				if (tile instanceof TileTurbineController) return new ContainerTurbineController(player, (TileTurbineController) tile);
+			case 200:
+				if (tile instanceof TileFissionIrradiator) return new ContainerFissionIrradiator(player, (TileFissionIrradiator) tile);
+			case 201:
+				if (tile instanceof TileSolidFissionCell) return new ContainerSolidFissionCell(player, (TileSolidFissionCell) tile);
+			case 202:
+				if (tile instanceof TileSaltFissionVessel) return new ContainerSaltFissionVessel(player, (TileSaltFissionVessel) tile);
+			case 203:
+				if (tile instanceof TileSaltFissionHeater) return new ContainerSaltFissionHeater(player, (TileSaltFissionHeater) tile);
+			case 300:
+				if (tile instanceof TileFissionIrradiatorPort) return new ContainerFissionIrradiatorPort(player, (TileFissionIrradiatorPort) tile);
+			case 301:
+				if (tile instanceof TileFissionCellPort) return new ContainerFissionCellPort(player, (TileFissionCellPort) tile);
+			case 302:
+				if (tile instanceof TileFissionVesselPort) return new ContainerFissionVesselPort(player, (TileFissionVesselPort) tile);
+			case 303:
+				if (tile instanceof TileFissionHeaterPort) return new ContainerFissionHeaterPort(player, (TileFissionHeaterPort) tile);
 			case 1001:
 				if (tile instanceof Manufactory) return new ContainerMachineConfig(player, (Manufactory) tile);
 			case 1002:
-				if (tile instanceof IsotopeSeparator) return new ContainerMachineConfig(player, (IsotopeSeparator) tile);
+				if (tile instanceof Separator) return new ContainerMachineConfig(player, (Separator) tile);
 			case 1003:
 				if (tile instanceof DecayHastener) return new ContainerMachineConfig(player, (DecayHastener) tile);
 			case 1004:
@@ -155,7 +195,7 @@ public class GuiHandler implements IGuiHandler {
 			case 1009:
 				if (tile instanceof Electrolyzer) return new ContainerMachineConfig(player, (Electrolyzer) tile);
 			case 1010:
-				if (tile instanceof Irradiator) return new ContainerMachineConfig(player, (Irradiator) tile);
+				if (tile instanceof Assembler) return new ContainerMachineConfig(player, (Assembler) tile);
 			case 1011:
 				if (tile instanceof IngotFormer) return new ContainerMachineConfig(player, (IngotFormer) tile);
 			case 1012:
@@ -190,7 +230,7 @@ public class GuiHandler implements IGuiHandler {
 			case 1:
 				if (tile instanceof Manufactory) return new GuiManufactory(player, (Manufactory) tile);
 			case 2:
-				if (tile instanceof IsotopeSeparator) return new GuiIsotopeSeparator(player, (IsotopeSeparator) tile);
+				if (tile instanceof Separator) return new GuiSeparator(player, (Separator) tile);
 			case 3:
 				if (tile instanceof DecayHastener) return new GuiDecayHastener(player, (DecayHastener) tile);
 			case 4:
@@ -206,7 +246,7 @@ public class GuiHandler implements IGuiHandler {
 			case 9:
 				if (tile instanceof Electrolyzer) return new GuiElectrolyzer(player, (Electrolyzer) tile);
 			case 10:
-				if (tile instanceof Irradiator) return new GuiIrradiator(player, (Irradiator) tile);
+				if (tile instanceof Assembler) return new GuiAssembler(player, (Assembler) tile);
 			case 11:
 				if (tile instanceof IngotFormer) return new GuiIngotFormer(player, (IngotFormer) tile);
 			case 12:
@@ -235,10 +275,26 @@ public class GuiHandler implements IGuiHandler {
 				if (tile instanceof TileHeatExchangerController) return new GuiHeatExchangerController(((TileHeatExchangerController) tile).getMultiblock(), tile.getPos(), ((TileHeatExchangerController) tile).getMultiblock().getContainer(player));
 			case 104:
 				if (tile instanceof TileTurbineController) return new GuiTurbineController(((TileTurbineController) tile).getMultiblock(), tile.getPos(), ((TileTurbineController) tile).getMultiblock().getContainer(player));
+			case 200:
+				if (tile instanceof TileFissionIrradiator) return new GuiFissionIrradiator(player, (TileFissionIrradiator) tile);
+			case 201:
+				if (tile instanceof TileSolidFissionCell) return new GuiSolidFissionCell(player, (TileSolidFissionCell) tile);
+			case 202:
+				if (tile instanceof TileSaltFissionVessel) return new GuiSaltFissionVessel(player, (TileSaltFissionVessel) tile);
+			case 203:
+				if (tile instanceof TileSaltFissionHeater) return new GuiSaltFissionHeater(player, (TileSaltFissionHeater) tile);
+			case 300:
+				if (tile instanceof TileFissionIrradiatorPort) return new GuiFissionIrradiatorPort(player, (TileFissionIrradiatorPort) tile);
+			case 301:
+				if (tile instanceof TileFissionCellPort) return new GuiFissionCellPort(player, (TileFissionCellPort) tile);
+			case 302:
+				if (tile instanceof TileFissionVesselPort) return new GuiFissionVesselPort(player, (TileFissionVesselPort) tile);
+			case 303:
+				if (tile instanceof TileFissionHeaterPort) return new GuiFissionHeaterPort(player, (TileFissionHeaterPort) tile);
 			case 1001:
 				if (tile instanceof Manufactory) return new GuiManufactory.SideConfig(player, (Manufactory) tile);
 			case 1002:
-				if (tile instanceof IsotopeSeparator) return new GuiIsotopeSeparator.SideConfig(player, (IsotopeSeparator) tile);
+				if (tile instanceof Separator) return new GuiSeparator.SideConfig(player, (Separator) tile);
 			case 1003:
 				if (tile instanceof DecayHastener) return new GuiDecayHastener.SideConfig(player, (DecayHastener) tile);
 			case 1004:
@@ -254,7 +310,7 @@ public class GuiHandler implements IGuiHandler {
 			case 1009:
 				if (tile instanceof Electrolyzer) return new GuiElectrolyzer.SideConfig(player, (Electrolyzer) tile);
 			case 1010:
-				if (tile instanceof Irradiator) return new GuiIrradiator.SideConfig(player, (Irradiator) tile);
+				if (tile instanceof Assembler) return new GuiAssembler.SideConfig(player, (Assembler) tile);
 			case 1011:
 				if (tile instanceof IngotFormer) return new GuiIngotFormer.SideConfig(player, (IngotFormer) tile);
 			case 1012:
